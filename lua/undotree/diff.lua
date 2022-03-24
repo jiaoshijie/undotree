@@ -1,4 +1,5 @@
 local diff = {}
+local create_float_window = require("undotree.ui").create_float_window
 
 -- NOTICE: it different from undotree.actions
 local undo2 = function(cseq)
@@ -37,14 +38,15 @@ local parseDiffInfo = function(diff_lines, old_seq, new_seq)
   vim.api.nvim_buf_set_option(Jsj_undotree.diffbufnr, 'modifiable', false)
 end
 
-diff.update = function()
+local create_diff = function()
   local info = Jsj_undotree.asciimeta[#Jsj_undotree.charGraph - vim.fn.line('.') + 1]
   if info == nil then return end
   local cseq = info.seq
   if cseq == Jsj_undotree.seq_cur then
-    if Jsj_undotree.diffwinid ~= -1 then
-      vim.api.nvim_win_close(Jsj_undotree.diffwinid, {force=true})
-      Jsj_undotree.diffwinid = -1
+    local diffwinid = vim.fn.bufwinid(Jsj_undotree.diffbufnr)
+    if diffwinid ~= -1 then
+      vim.api.nvim_win_close(diffwinid, {force=true})
+      Jsj_undotree.diffbufnr = -1
     end
     return
   end
@@ -80,6 +82,19 @@ diff.update = function()
   vim.cmd(string.format('silent exe "%s"', "norm! " .. vim.fn.bufwinnr(Jsj_undotree.diffbufnr) .. "\\<c-w>\\<c-w>"))
   parseDiffInfo(diff_res, Jsj_undotree.seq_cur, cseq)
   vim.opt.eventignore = ev_bak
+end
+
+diff.update_diff = function()
+  if vim.fn.bufwinnr(Jsj_undotree.diffbufnr) == -1 then
+    create_float_window()
+  end
+  create_diff()
+  if vim.fn.bufnr() ~= Jsj_undotree.bufnr then
+    local ev_bak = vim.opt.eventignore:get()
+    vim.opt.eventignore = { "BufEnter","BufLeave","BufWinLeave","InsertLeave","CursorMoved","BufWritePost" }
+    vim.cmd(string.format('silent exe "%s"', "norm! " .. vim.fn.bufwinnr(Jsj_undotree.bufnr) .. "\\<c-w>\\<c-w>"))
+    vim.opt.eventignore = ev_bak
+  end
 end
 
 return diff

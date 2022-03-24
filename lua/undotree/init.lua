@@ -1,9 +1,8 @@
 local undotree = require('undotree.undotree')
-local ui = require('undotree.ui')
 local actions = require('undotree.actions')
 local _M = {}
 
-local update = function()
+local function update()
   if vim.bo.filetype == 'undotree' or vim.bo.filetype == 'qf' then
     return
   end
@@ -20,7 +19,7 @@ local update = function()
     Jsj_undotree:parseEntries(newtree.entries, tree)
     Jsj_undotree:getGraphInfo(tree)
   end
-  ui.update_split_window()
+  Jsj_undotree:update_undotree()
   actions.setFocus()
   local lnum = Jsj_undotree.asciimeta[Jsj_undotree.seq2index[Jsj_undotree.seq_cur]].lnum
   vim.fn.cursor({lnum, actions.findStar(lnum)})

@@ -1,5 +1,6 @@
 local actions = {}
-local diff_update = require('undotree.ui').update_diff_window
+local update_diff = require('undotree.diff').update_diff
+local ui = require('undotree.ui')
 
 local jump2star = function(direction)
   local lnum = vim.fn.line('.')
@@ -50,12 +51,12 @@ end
 
 actions.prev_star = function()
   jump2star(-1)
-  diff_update()
+  update_diff()
 end
 
 actions.next_star = function()
   jump2star(1)
-  diff_update()
+  update_diff()
 end
 
 actions.prev_state = function()
@@ -69,23 +70,13 @@ actions.next_state = function()
 end
 
 actions.quit_undotree = function()
-  if Jsj_undotree == nil then return end
-  if Jsj_undotree.winid ~= -1 then
-    vim.api.nvim_win_close(Jsj_undotree.winid, {force=true})
-    Jsj_undotree.winid = -1
-  end
-  if Jsj_undotree.bufnr ~= -1 then
-    vim.api.nvim_buf_delete(Jsj_undotree.bufnr, {force=true, unload=false})
-    Jsj_undotree.bufnr = -1
-  end
-  Jsj_undotree.targetbufnr = -1
+  ui.quit_diff_win()
+  ui.quit_undotree_split()
+  Jsj_undotree = nil
 end
 
-actions.quit_undotree_diff = function()
-  if Jsj_undotree.diffwinid ~= -1 then
-    vim.api.nvim_win_close(Jsj_undotree.diffwinid, {force=true})
-    Jsj_undotree.diffwinid = -1
-  end
+actions.quit_diff_win = function()
+  ui.quit_diff_win()
 end
 
 actions.undo2 = function(cseq)
@@ -104,13 +95,13 @@ actions.actionEnter = function()
   actions.undo2(info.seq)
   Jsj_undotree:setMark(info.seq, vim.fn.line('.'))
   Jsj_undotree.seq_cur = info.seq
-  diff_update()
+  update_diff()
 end
 
 actions.showOrFocusDiffWindow = function()
   local winnr = vim.fn.bufwinnr(Jsj_undotree.diffbufnr)
   if winnr == -1 then
-    diff_update()
+    update_diff()
   else
     vim.cmd(string.format('silent exe "%s"', "norm! " .. winnr .. "\\<c-w>\\<c-w>"))
   end

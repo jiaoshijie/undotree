@@ -1,16 +1,26 @@
 local undotree = {}
 local if_nil = vim.F.if_nil
+local create_split_window = require("undotree.ui").create_split_window
 -- node = {seq='number', time='number', save='number', b='table'}
+local default_mappings = {
+  k = 'prev_star',
+  j = 'next_star',
+  Q = 'quit_undotree',
+  q = 'quit_undotree_diff',
+  K = 'prev_state',
+  J = 'next_state',
+  p = 'showOrFocusDiffWindow',
+  ['<cr>'] = 'actionEnter',
+}
+
 
 function undotree:new()
   local newObj = {}
   newObj.undotreeName = 'undotree_tree_buf'
   newObj.undotreeFloatName = 'undotree_float_diff_buf'
   newObj.bufnr = -1
-  newObj.winid = -1
   newObj.targetbufnr = -1
   newObj.diffbufnr = -1
-  newObj.diffwinid = -1
   newObj.diffbufnr_border = -1
 
   newObj.charGraph = {}
@@ -236,6 +246,16 @@ function undotree:graph2buf()
     i = i + 1
   end
   vim.api.nvim_buf_set_option(self.bufnr, 'modifiable', false)
+end
+
+function undotree:update_undotree()
+  if vim.fn.bufwinnr(self.bufnr) == -1 then
+    create_split_window()
+  end
+  self:graph2buf()
+  for k, v in pairs(default_mappings) do
+    vim.api.nvim_buf_set_keymap(self.bufnr, 'n', k, "<cmd>lua require('undotree.actions')." .. v .. "()<cr>", {noremap=true, silent=true})
+  end
 end
 
 return undotree
