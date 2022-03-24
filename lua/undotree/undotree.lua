@@ -224,7 +224,10 @@ function undotree:graph2buf()
   vim.api.nvim_buf_set_option(self.bufnr, 'modifiable', true)
   -- clear the buf
   if vim.fn.bufnr() ~= self.bufnr then
+    local ev_bak = vim.opt.eventignore:get()
+    vim.opt.eventignore = { "BufEnter","BufLeave","BufWinLeave","InsertLeave","CursorMoved","BufWritePost" }
     vim.cmd(string.format('silent exe "%s"', "norm! " .. vim.fn.bufwinnr(self.bufnr) .. "\\<c-w>\\<c-w>"))
+    vim.opt.eventignore = ev_bak
   end
   vim.cmd[[silent exe '1,$ d _']]
   local i = 0

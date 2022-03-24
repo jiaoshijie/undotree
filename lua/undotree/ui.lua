@@ -44,16 +44,32 @@ local create_split_window = function()
   end
   set_bufAndWin_option(Jsj_undotree.bufnr, Jsj_undotree.winid)
   local group = vim.api.nvim_create_augroup("undotreeQuit", {clear=true})
-  vim.api.nvim_create_autocmd({"BufHidden"}, {callback=function()
-    if Jsj_undotree.diffwinid ~= -1 then
-      vim.api.nvim_win_close(Jsj_undotree.diffwinid, {force=true})
-      Jsj_undotree.diffwinid = -1
-    end
-    if vim.fn.bufwinid(Jsj_undotree.diffbufnr_border) ~= -1 then
-      vim.api.nvim_win_close(vim.fn.bufwinid(Jsj_undotree.diffbufnr_border), {force=true})
-      Jsj_undotree.diffbufnr_border = -1
-    end
-  end, buffer=Jsj_undotree.bufnr, group=group})
+  vim.api.nvim_create_autocmd({"BufHidden"}, {
+    group = group,
+    buffer=Jsj_undotree.bufnr,
+    callback=function()
+      if Jsj_undotree.diffwinid ~= -1 then
+        vim.api.nvim_win_close(Jsj_undotree.diffwinid, {force=true})
+        Jsj_undotree.diffwinid = -1
+      end
+      if vim.fn.bufwinid(Jsj_undotree.diffbufnr_border) ~= -1 then
+        vim.api.nvim_win_close(vim.fn.bufwinid(Jsj_undotree.diffbufnr_border), {force=true})
+        Jsj_undotree.diffbufnr_border = -1
+      end
+  end})
+  vim.api.nvim_create_autocmd({"BufEnter"}, {
+    group = group,
+    buffer=Jsj_undotree.targetbufnr,
+    callback=function()
+      if Jsj_undotree.diffwinid ~= -1 then
+        vim.api.nvim_win_close(Jsj_undotree.diffwinid, {force=true})
+        Jsj_undotree.diffwinid = -1
+      end
+      if vim.fn.bufwinid(Jsj_undotree.diffbufnr_border) ~= -1 then
+        vim.api.nvim_win_close(vim.fn.bufwinid(Jsj_undotree.diffbufnr_border), {force=true})
+        Jsj_undotree.diffbufnr_border = -1
+      end
+  end})
 end
 
 ui.update_split_window = function()
@@ -141,7 +157,10 @@ ui.update_diff_window = function()
   end
   diff.update()
   if vim.fn.bufnr() ~= Jsj_undotree.bufnr then
+    local ev_bak = vim.opt.eventignore:get()
+    vim.opt.eventignore = { "BufEnter","BufLeave","BufWinLeave","InsertLeave","CursorMoved","BufWritePost" }
     vim.cmd(string.format('silent exe "%s"', "norm! " .. vim.fn.bufwinnr(Jsj_undotree.bufnr) .. "\\<c-w>\\<c-w>"))
+    vim.opt.eventignore = ev_bak
   end
 end
 

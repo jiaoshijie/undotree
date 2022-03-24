@@ -52,6 +52,8 @@ diff.update = function()
   local old_buf_con = vim.fn.getbufline(Jsj_undotree.targetbufnr, '^', '$')
   local targetwinnr = vim.fn.bufwinnr(Jsj_undotree.targetbufnr)
   if targetwinnr == -1 then return false end
+  local ev_bak = vim.opt.eventignore:get()
+  vim.opt.eventignore = { "BufEnter","BufLeave","BufWinLeave","InsertLeave","CursorMoved","BufWritePost" }
   vim.cmd(string.format('silent exe "%s"', "norm! " .. targetwinnr .. "\\<c-w>\\<c-w>"))
   local savedview = vim.fn.winsaveview()
   undo2(cseq)
@@ -77,6 +79,7 @@ diff.update = function()
 
   vim.cmd(string.format('silent exe "%s"', "norm! " .. vim.fn.bufwinnr(Jsj_undotree.diffbufnr) .. "\\<c-w>\\<c-w>"))
   parseDiffInfo(diff_res, Jsj_undotree.seq_cur, cseq)
+  vim.opt.eventignore = ev_bak
 end
 
 return diff

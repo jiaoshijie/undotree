@@ -21,9 +21,12 @@ local setTargetFocus = function()
 end
 
 local actionInTarget = function(cmd)
+  local ev_bak = vim.opt.eventignore:get()
+  vim.opt.eventignore = { "BufEnter","BufLeave","BufWinLeave","InsertLeave","CursorMoved","BufWritePost" }
   if not setTargetFocus() then return end
   vim.cmd(cmd)
   actions.setFocus()
+  vim.opt.eventignore = ev_bak
 end
 
 actions.findStar = function(lnum)

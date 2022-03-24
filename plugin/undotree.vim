@@ -1,1 +1,1 @@
-nnoremap <silent> <leader>U <cmd>lua require('undotree').toggle()<cr>
+nnoremap <silent> <leader>u <cmd>lua require('undotree').toggle()<cr>
