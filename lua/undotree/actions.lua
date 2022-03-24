@@ -103,7 +103,10 @@ actions.showOrFocusDiffWindow = function()
   if winnr == -1 then
     update_diff()
   else
+    local ev_bak = vim.opt.eventignore:get()
+    vim.opt.eventignore = { "BufEnter","BufLeave","BufWinLeave","InsertLeave","CursorMoved","BufWritePost" }
     vim.cmd(string.format('silent exe "%s"', "norm! " .. winnr .. "\\<c-w>\\<c-w>"))
+    vim.opt.eventignore = ev_bak
   end
 end
 
