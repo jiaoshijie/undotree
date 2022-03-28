@@ -14,17 +14,17 @@ local jump2star = function(direction)
   end
 end
 
-local setTargetFocus = function()
-  local winnr = vim.fn.bufwinnr(Jsj_undotree.targetbufnr)
+local setTargetFocus = function(jsj_undotree)
+  local winnr = vim.fn.bufwinnr(jsj_undotree.targetbufnr)
   if winnr == -1 then return false end
   vim.cmd(string.format('silent exe "%s"', "norm! " .. winnr .. "\\<c-w>\\<c-w>"))
   return true
 end
 
-local actionInTarget = function(cmd)
+local actionInTarget = function(jsj_undotree, cmd)
   local ev_bak = vim.opt.eventignore:get()
   vim.opt.eventignore = { "BufEnter","BufLeave","BufWinLeave","InsertLeave","CursorMoved","BufWritePost" }
-  if not setTargetFocus() then return end
+  if not setTargetFocus(jsj_undotree) then return end
   vim.cmd(cmd)
   actions.setFocus()
   vim.opt.eventignore = ev_bak
@@ -42,64 +42,64 @@ actions.findStar = function(lnum)
   return nil
 end
 
-actions.setFocus = function()
-  if vim.fn.bufnr() == Jsj_undotree.bufnr then return end
-  local winnr = vim.fn.bufwinnr(Jsj_undotree.bufnr)
+actions.setFocus = function(jsj_undotree)
+  if vim.fn.bufnr() == jsj_undotree.bufnr then return end
+  local winnr = vim.fn.bufwinnr(jsj_undotree.bufnr)
   if winnr == -1 then return end
   vim.cmd(string.format('silent exe "%s"', "norm! " .. winnr .. "\\<c-w>\\<c-w>"))
 end
 
-actions.prev_star = function()
+actions.prev_star = function(jsj_undotree)
   jump2star(-1)
-  update_diff()
+  update_diff(jsj_undotree)
 end
 
-actions.next_star = function()
+actions.next_star = function(jsj_undotree)
   jump2star(1)
-  update_diff()
+  update_diff(jsj_undotree)
 end
 
-actions.prev_state = function()
+actions.prev_state = function(jsj_undotree)
   jump2star(-1)
-  actions.actionEnter()
+  actions.actionEnter(jsj_undotree)
 end
 
-actions.next_state = function()
+actions.next_state = function(jsj_undotree)
   jump2star(1)
-  actions.actionEnter()
+  actions.actionEnter(jsj_undotree)
 end
 
-actions.quit_undotree = function()
-  ui.quit_diff_win()
-  ui.quit_undotree_split()
-  Jsj_undotree = nil
+actions.quit_undotree = function(jsj_undotree)
+  ui.quit_diff_win(jsj_undotree)
+  ui.quit_undotree_split(jsj_undotree)
+  jsj_undotree:clear()
 end
 
-actions.quit_diff_win = function()
-  ui.quit_diff_win()
+actions.quit_diff_win = function(jsj_undotree)
+  ui.quit_diff_win(jsj_undotree)
 end
 
-actions.undo2 = function(cseq)
+actions.undo2 = function(jsj_undotree, cseq)
   if cseq == 0 then
-    actionInTarget(string.format('silent exe "%s"', 'norm! ' .. Jsj_undotree.seq_last .. 'u'))
+    actionInTarget(string.format('silent exe "%s"', 'norm! ' .. jsj_undotree.seq_last .. 'u'))
     return
   end
   actionInTarget(string.format('silent exe "%s"', 'undo ' .. cseq))
 end
 
-actions.actionEnter = function()
-  local info = Jsj_undotree.asciimeta[#Jsj_undotree.charGraph - vim.fn.line('.') + 1]
+actions.actionEnter = function(jsj_undotree)
+  local info = jsj_undotree.asciimeta[#jsj_undotree.charGraph - vim.fn.line('.') + 1]
   if info == nil then
     return
   end
   actions.undo2(info.seq)
-  Jsj_undotree:setMark(info.seq, vim.fn.line('.'))
-  Jsj_undotree.seq_cur = info.seq
+  jsj_undotree:setMark(info.seq, vim.fn.line('.'))
+  jsj_undotree.seq_cur = info.seq
   update_diff()
 end
 
-actions.showOrFocusDiffWindow = function()
-  local winnr = vim.fn.bufwinnr(Jsj_undotree.diffbufnr)
+actions.showOrFocusDiffWindow = function(jsj_undotree)
+  local winnr = vim.fn.bufwinnr(jsj_undotree.diffbufnr)
   if winnr == -1 then
     update_diff()
   else
@@ -108,6 +108,10 @@ actions.showOrFocusDiffWindow = function()
     vim.cmd(string.format('silent exe "%s"', "norm! " .. winnr .. "\\<c-w>\\<c-w>"))
     vim.opt.eventignore = ev_bak
   end
+end
+
+actions.create_undo_window = function(jsj_undotree)
+  ui.create_split_window(jsj_undotree)
 end
 
 return actions

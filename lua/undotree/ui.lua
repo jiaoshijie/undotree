@@ -18,36 +18,37 @@ local set_bufAndWin_option = function(bufnr, winid)
   vim.api.nvim_buf_set_option(bufnr, 'modifiable', false)
 end
 
-ui.create_split_window = function()
-  if Jsj_undotree.bufnr ~= -1 and vim.fn.bufwinnr(Jsj_undotree.bufnr) ~= -1 then
+ui.create_split_window = function(jsj_undotree)
+  if jsj_undotree.bufnr ~= -1 and vim.fn.bufwinnr(jsj_undotree.bufnr) ~= -1 then
     return
   end
-  local winid = vim.fn.bufwinid(Jsj_undotree.bufnr)
+  local winid = vim.fn.bufwinid(jsj_undotree.bufnr)
   if winid == -1 then
-    Jsj_undotree.bufnr = vim.api.nvim_create_buf(false, true)
-    vim.api.nvim_buf_set_name(Jsj_undotree.bufnr, Jsj_undotree.undotreeName)
+    jsj_undotree.bufnr = vim.api.nvim_create_buf(false, true)
+    vim.api.nvim_buf_set_name(jsj_undotree.bufnr, jsj_undotree.undotreeName)
     local screen_width = vim.api.nvim_get_option('columns')
-    vim.cmd('silent keepalt topleft vertical ' .. tostring(math.floor(screen_width * 0.25)) .. ' new ' .. Jsj_undotree.undotreeName)
-    winid = vim.fn.bufwinid(Jsj_undotree.bufnr)
+    vim.cmd('silent keepalt topleft vertical ' .. tostring(math.floor(screen_width * 0.25)) .. ' new ' .. jsj_undotree.undotreeName)
+    winid = vim.fn.bufwinid(jsj_undotree.bufnr)
   end
-  set_bufAndWin_option(Jsj_undotree.bufnr, winid)
+  set_bufAndWin_option(jsj_undotree.bufnr, winid)
   local group = vim.api.nvim_create_augroup("undotree_buf", {clear=true})
   vim.api.nvim_create_autocmd("BufWipeout", {
     group = group,
-    buffer=Jsj_undotree.bufnr,
+    buffer=jsj_undotree.bufnr,
     callback=function()
-      ui.quit_diff_win()
-      Jsj_undotree = nil
+      ui.quit_diff_win(jsj_undotree)
+      jsj_undotree:clear()
   end})
   vim.api.nvim_create_autocmd("BufLeave", {
     group = group,
-    buffer = Jsj_undotree.bufnr,
+    buffer = jsj_undotree.bufnr,
     callback = function()
-      ui.quit_diff_win()
+      ui.quit_diff_win(jsj_undotree)
   end})
 end
 
-local create_float_border = function(bufnr)
+local create_float_border = function(jsj_undotree)
+  local bufnr = jsj_undotree.diffbufnr
   local width = vim.api.nvim_get_option("columns") - vim.fn.winwidth(0)
   local height = vim.api.nvim_get_option("lines")
   -- size
@@ -74,7 +75,7 @@ local create_float_border = function(bufnr)
     col = col - 1,
     zindex = 1,
   }
-  Jsj_undotree.diffbufnr_border = vim.api.nvim_create_buf(false, true)
+  jsj_undotree.diffbufnr_border = vim.api.nvim_create_buf(false, true)
 
   local border_lines = { '╭' .. string.rep('─', win_width) .. '╮' }
   local middle_line = '│' .. string.rep(' ', win_width) .. '│'
@@ -84,58 +85,57 @@ local create_float_border = function(bufnr)
     i = i + 1
   end
   table.insert(border_lines, '╰' .. string.rep('─', win_width) .. '╯')
-  vim.api.nvim_buf_set_lines(Jsj_undotree.diffbufnr_border, 0, -1, false, border_lines)
-  vim.api.nvim_buf_set_option(Jsj_undotree.diffbufnr_border, 'modifiable', false)
+  vim.api.nvim_buf_set_lines(jsj_undotree.diffbufnr_border, 0, -1, false, border_lines)
+  vim.api.nvim_buf_set_option(jsj_undotree.diffbufnr_border, 'modifiable', false)
 
-  local diff_border_winid = vim.api.nvim_open_win(Jsj_undotree.diffbufnr_border, false, border_opts)
+  local diff_border_winid = vim.api.nvim_open_win(jsj_undotree.diffbufnr_border, false, border_opts)
   local diffwinid = vim.api.nvim_open_win(bufnr, false, opts)
 
   local group = vim.api.nvim_create_augroup("undotreeQuitBorder", {clear=true})
   vim.api.nvim_create_autocmd({"BufWipeout"}, {callback=function()
-    if vim.fn.bufwinid(Jsj_undotree.diffbufnr_border) ~= -1 then
-      vim.api.nvim_win_close(vim.fn.bufwinid(Jsj_undotree.diffbufnr_border), {force=true})
-      Jsj_undotree.diffbufnr_border = -1
+    if vim.fn.bufwinid(jsj_undotree.diffbufnr_border) ~= -1 then
+      vim.api.nvim_win_close(vim.fn.bufwinid(jsj_undotree.diffbufnr_border), {force=true})
+      jsj_undotree.diffbufnr_border = -1
     end
   end, buffer=bufnr, group=group})
   return diffwinid, diff_border_winid
 end
 
-ui.create_float_window = function()
-  if Jsj_undotree.diffbufnr == -1 then
-    Jsj_undotree.diffbufnr = vim.api.nvim_create_buf(false, true)
-    vim.api.nvim_buf_set_name(Jsj_undotree.diffbufnr, Jsj_undotree.undotreeFloatName)
+ui.create_float_window = function(jsj_undotree)
+  if jsj_undotree.diffbufnr == -1 then
+    jsj_undotree.diffbufnr = vim.api.nvim_create_buf(false, true)
+    vim.api.nvim_buf_set_name(jsj_undotree.diffbufnr, jsj_undotree.undotreeFloatName)
   end
-  local diffwinid = vim.fn.bufwinid(Jsj_undotree.diffbufnr)
+  local diffwinid = vim.fn.bufwinid(jsj_undotree.diffbufnr)
   local diff_border_winid = nil
   if diffwinid == -1 then
     local ev_bak = vim.opt.eventignore:get()
     vim.opt.eventignore = { "BufEnter","BufLeave","BufWinLeave","InsertLeave","CursorMoved","BufWritePost" }
-    diffwinid, diff_border_winid = create_float_border(Jsj_undotree.diffbufnr)
+    diffwinid, diff_border_winid = create_float_border(jsj_undotree)
     vim.opt.eventignore = ev_bak
   end
-  set_bufAndWin_option(Jsj_undotree.diffbufnr, diffwinid)
-  set_bufAndWin_option(Jsj_undotree.diffbufnr_border, diff_border_winid)
+  set_bufAndWin_option(jsj_undotree.diffbufnr, diffwinid)
+  set_bufAndWin_option(jsj_undotree.diffbufnr_border, diff_border_winid)
 end
 
-ui.quit_undotree_split = function()
-  if Jsj_undotree == nil then return end
-  Jsj_undotree.targetbufnr = -1
-  local winid = vim.fn.bufwinid(Jsj_undotree.bufnr)
+ui.quit_undotree_split = function(jsj_undotree)
+  jsj_undotree.targetbufnr = -1
+  local winid = vim.fn.bufwinid(jsj_undotree.bufnr)
   if winid ~= -1 then
-    Jsj_undotree.bufnr = -1
+    jsj_undotree.bufnr = -1
     vim.api.nvim_win_close(winid, {force=true})
   end
 end
 
-ui.quit_diff_win = function()
-  local diffwinid = vim.fn.bufwinid(Jsj_undotree.diffbufnr)
+ui.quit_diff_win = function(jsj_undotree)
+  local diffwinid = vim.fn.bufwinid(jsj_undotree.diffbufnr)
   if diffwinid ~= -1 then
-    Jsj_undotree.diffbufnr = -1
+    jsj_undotree.diffbufnr = -1
     vim.api.nvim_win_close(diffwinid, {force=true})
   end
-  diffwinid = vim.fn.bufwinid(Jsj_undotree.diffbufnr_border)
+  diffwinid = vim.fn.bufwinid(jsj_undotree.diffbufnr_border)
   if diffwinid ~= -1 then
-    Jsj_undotree.diffbufnr_border = -1
+    jsj_undotree.diffbufnr_border = -1
     vim.api.nvim_win_close(diffwinid, {force=true})
   end
 end

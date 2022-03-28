@@ -6,6 +6,10 @@ A neovim undotree plugin written in lua.
 
 ![undotree](./screenshot/undotree.png)
 
+### Requirements
+
+- nvim 0.7.0(nightly)
+
 ### Download and Install
 
 Using Vim's built-in package manager:
