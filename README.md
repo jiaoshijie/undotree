@@ -8,7 +8,7 @@ A neovim undotree plugin written in lua.
 
 ### Requirements
 
-- nvim 0.7.0(nightly)
+- nvim 0.7.0 or above
 
 ### Download and Install
 
