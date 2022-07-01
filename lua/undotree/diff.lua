@@ -1,100 +1,85 @@
-local diff = {}
-local create_float_window = require("undotree.ui").create_float_window
+local Diff = {}
+Diff.__index = Diff
 
--- NOTICE: it different from undotree.actions
-local undo2 = function(jsj_undotree, cseq)
+local undo2 = function(cseq, seq_last)
+  local cmd
   if cseq == 0 then
-    vim.cmd(string.format('silent exe "%s"', 'norm! ' .. jsj_undotree.seq_last .. 'u'))
-    return
+    cmd = string.format('silent exe "%s"', 'norm! ' .. seq_last .. 'u')
+  else
+    cmd = string.format('silent exe "%s"', 'undo ' .. cseq)
   end
-  vim.cmd(string.format('silent exe "%s"', 'undo ' .. cseq))
+  vim.cmd(cmd)
 end
 
-local parseDiffInfo = function(jsj_undotree, diff_lines, old_seq, new_seq)
-  if vim.fn.bufnr() ~= jsj_undotree.diffbufnr then
-    vim.cmd(string.format('silent exe "%s"', "norm! " .. vim.fn.bufwinnr(jsj_undotree.diffbufnr) .. "\\<c-w>\\<c-w>"))
-  end
-  vim.api.nvim_buf_set_option(jsj_undotree.diffbufnr, 'modifiable', true)
-  vim.cmd[[silent exe '1,$ d _']]
-  local lnum = 0
-  vim.api.nvim_buf_set_lines(jsj_undotree.diffbufnr, lnum, lnum + 1, false, { old_seq .. ' --> ' .. new_seq })
-  vim.api.nvim_buf_add_highlight(jsj_undotree.diffbufnr, -1, 'UndotreeDiffLine', lnum, 0, -1)
-  lnum = lnum + 1
+function Diff:new()
+  local obj = setmetatable({
+    -- TODO: maybe record current bufer number
+    old_seq = nil,
+    new_seq = nil,
+    diff_info = {},
+    diff_highlight = {},
+  }, self)
+  return obj
+end
+
+function Diff:set(old, new)
+  self.old_seq = old
+  self.new_seq = new
+  self.diff_info = {}
+  self.diff_highlight = {}
+end
+
+function Diff:parseDiff(diff_lines)
   for _, line in ipairs(diff_lines) do
     local ch = string.sub(line, 1, 1)
     if ch == '<' or ch == '>' then
       local prefix = ch == '<' and '- ' or '+ '
       local hlgroup = ch == '<' and 'UndotreeDiffRemoved' or 'UndotreeDiffAdded'
-      vim.api.nvim_buf_set_lines(jsj_undotree.diffbufnr, lnum, lnum + 1, false, { prefix .. line:sub(3) })
-      vim.api.nvim_buf_add_highlight(jsj_undotree.diffbufnr, -1, hlgroup, lnum, 0, -1)
-    elseif ch == '-' then
-      lnum = lnum - 1
-    else
-      vim.api.nvim_buf_set_lines(jsj_undotree.diffbufnr, lnum, lnum + 1, false, { line })
-      vim.api.nvim_buf_add_highlight(jsj_undotree.diffbufnr, -1, 'UndotreeDiffLine', lnum, 0, -1)
+      table.insert(self.diff_info, prefix .. line:sub(3))
+      table.insert(self.diff_highlight, hlgroup)
+    elseif ch ~= '-' then
+      table.insert(self.diff_info, line)
+      table.insert(self.diff_highlight, 'UndotreeDiffLine')
     end
-    lnum = lnum + 1
   end
-  vim.api.nvim_buf_set_option(jsj_undotree.diffbufnr, 'modifiable', false)
 end
 
-local create_diff = function(jsj_undotree)
-  local info = jsj_undotree.asciimeta[#jsj_undotree.charGraph - vim.fn.line('.') + 1]
-  if info == nil then return end
-  local cseq = info.seq
-  if cseq == jsj_undotree.seq_cur then
-    local diffwinid = vim.fn.bufwinid(jsj_undotree.diffbufnr)
-    if diffwinid ~= -1 then
-      vim.api.nvim_win_close(diffwinid, {force=true})
-      jsj_undotree.diffbufnr = -1
-    end
+function Diff:updateDiff(src_buf, src_win, undo_win, old_seq, new_seq, seq_last)
+  if old_seq == self.old_seq and new_seq == self.new_seq then
     return
   end
+  self:set(old_seq, new_seq)
+  table.insert(self.diff_info, old_seq .. ' --> ' .. new_seq)
+  table.insert(self.diff_highlight, 'UndotreeDiffLine')
 
-  local old_buf_con = vim.fn.getbufline(jsj_undotree.targetbufnr, '^', '$')
-  local targetwinnr = vim.fn.bufwinnr(jsj_undotree.targetbufnr)
-  if targetwinnr == -1 then return false end
-  local ev_bak = vim.opt.eventignore:get()
-  vim.opt.eventignore = { "BufEnter","BufLeave","BufWinLeave","InsertLeave","CursorMoved","BufWritePost" }
-  vim.cmd(string.format('silent exe "%s"', "norm! " .. targetwinnr .. "\\<c-w>\\<c-w>"))
-  local savedview = vim.fn.winsaveview()
-  undo2(jsj_undotree, cseq)
-  local new_buf_con = vim.fn.getbufline(jsj_undotree.targetbufnr, '^', '$')
-  undo2(jsj_undotree, jsj_undotree.seq_cur)
-  vim.fn.winrestview(savedview)
+  if old_seq ~= new_seq then
+    local old_buf_con = vim.api.nvim_buf_get_lines(src_buf, 0, -1, false)
+    vim.cmd("noautocmd lua vim.api.nvim_set_current_win(" .. src_win .. ")")
+    local savedview = vim.fn.winsaveview()
+    undo2(new_seq, seq_last)
+    local new_buf_con = vim.api.nvim_buf_get_lines(src_buf, 0, -1, false)
+    undo2(old_seq, seq_last)
+    vim.fn.winrestview(savedview)
+    vim.cmd("noautocmd lua vim.api.nvim_set_current_win(" .. undo_win .. ")")
+    local tempfile1 = vim.fn.tempname()  -- old buf
+    local tempfile2 = vim.fn.tempname()  -- new buf
 
-  local tempfile1 = vim.fn.tempname()  -- old buf
-  local tempfile2 = vim.fn.tempname()  -- new buf
-  if vim.fn.writefile(old_buf_con, tempfile1) == -1 then
-    vim.api.nvim_err_writeln(tempfile1 .. '(tempfile1) can not be written.')
-  end
-  if vim.fn.writefile(new_buf_con, tempfile2) == -1 then
-    vim.api.nvim_err_writeln(tempfile2 .. '(tempfile2) can not be written.')
-  end
-  local diff_res = vim.fn.split(vim.fn.system('diff ' .. tempfile1 .. ' ' .. tempfile2), '\n')
-  if not os.remove(tempfile1) then
-    vim.api.nvim_err_writeln(tempfile1 .. '(tempfile1) can not be removed.')
-  end
-  if not os.remove(tempfile2) then
-    vim.api.nvim_err_writeln(tempfile2 .. '(tempfile2) can not be removed.')
-  end
+    local ok, err = pcall(vim.fn.writefile, old_buf_con, tempfile1)
+    if not ok then
+      vim.api.nvim_err_writeln(err)
+    end
+    ok, err = pcall(vim.fn.writefile, new_buf_con, tempfile2)
+    if not ok then
+      vim.api.nvim_err_writeln(err)
+    end
 
-  vim.cmd(string.format('silent exe "%s"', "norm! " .. vim.fn.bufwinnr(jsj_undotree.diffbufnr) .. "\\<c-w>\\<c-w>"))
-  parseDiffInfo(jsj_undotree, diff_res, jsj_undotree.seq_cur, cseq)
-  vim.opt.eventignore = ev_bak
-end
+    local diff_res = vim.fn.split(vim.fn.system('diff ' .. tempfile1 .. ' ' .. tempfile2), '\n')
 
-diff.update_diff = function(jsj_undotree)
-  if vim.fn.bufwinnr(jsj_undotree.diffbufnr) == -1 then
-    create_float_window(jsj_undotree)
-  end
-  create_diff(jsj_undotree)
-  if vim.fn.bufnr() ~= jsj_undotree.bufnr then
-    local ev_bak = vim.opt.eventignore:get()
-    vim.opt.eventignore = { "BufEnter","BufLeave","BufWinLeave","InsertLeave","CursorMoved","BufWritePost" }
-    vim.cmd(string.format('silent exe "%s"', "norm! " .. vim.fn.bufwinnr(jsj_undotree.bufnr) .. "\\<c-w>\\<c-w>"))
-    vim.opt.eventignore = ev_bak
+    os.remove(tempfile1)
+    os.remove(tempfile2)
+
+    self:parseDiff(diff_res)
   end
 end
 
-return diff
+return Diff
