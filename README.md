@@ -105,7 +105,7 @@ vim.keymap.set('n', '<leader>uc', require('undotree').close, { noremap = true, s
 | <kbd>K</kbd>    | jump to prev undo node and undo to this state |
 | <kbd>q</kbd>    | quit undotree                                 |
 | <kbd>p</kbd>    | jump into the undotree diff window            |
-| <kbd><cr></kbd> | undo to this state                            |
+| <kbd>Enter</kbd> | undo to this state                            |
 
 
 ### License
