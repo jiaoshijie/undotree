@@ -102,16 +102,18 @@ function Collector:new(opts)
     undotree_info = Undotree:new(),
     diff_previewer = Diff:new(),
     layout = if_nil(opts.layout, default_opt.layout),
-    window = {
-      winblend = if_nil(opts.window.winblend, default_opt.winblend),
-      height = 0,
-      width = 0,
-    },
   }, self)
 
-  obj.keymaps = default_opt.keymaps
-  for k, v in pairs(opts.keymaps) do
-    obj.keymaps[k] = v
+  obj.window = vim.deepcopy(default_opt.window)
+  if opts.window and opts.window.winblend then
+    obj.window.winblend = opts.window.winblend
+  end
+
+  obj.keymaps = vim.deepcopy(default_opt.keymaps)
+  if opts.keymaps then
+    for k, v in pairs(opts.keymaps) do
+      obj.keymaps[k] = v
+    end
   end
 
   return obj
