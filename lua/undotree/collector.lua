@@ -131,7 +131,7 @@ function Collector:run()
   if vim.o.laststatus ~= 0 then
     line_count = line_count - 1
   end
-  if vim.o.winbar and vim.o.winbar ~= "" then
+  if vim.fn.exists('+winbar') ~= 0 and vim.o.winbar ~= "" then
     line_count = line_count - 1
   end
 
