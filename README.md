@@ -85,26 +85,26 @@ undotree.setup({
 })
 ```
 
-You can directly use `:lua require('undotree').toggle()` for toggling undotree pannel, or set the following keymaps for convenient using.
+You can directly use `:lua require('undotree').toggle()` for toggling undotree panel, or set the following keymaps for convenient using.
 
 ```lua
-vim.keymap.set('n', '<leader>u', require('undotree').toggle, { noremap = true, silent = ture })
+vim.keymap.set('n', '<leader>u', require('undotree').toggle, { noremap = true, silent = true })
 
 -- or
-vim.keymap.set('n', '<leader>uo', require('undotree').open, { noremap = true, silent = ture })
-vim.keymap.set('n', '<leader>uc', require('undotree').close, { noremap = true, silent = ture })
+vim.keymap.set('n', '<leader>uo', require('undotree').open, { noremap = true, silent = true })
+vim.keymap.set('n', '<leader>uc', require('undotree').close, { noremap = true, silent = true })
 ```
 
 2. Some Mappings
 
-| Mappings        | Action                                        |
-| ----            | ----                                          |
-| <kbd>j</kbd>    | jump to next undo node                        |
-| <kbd>k</kbd>    | jump to prev undo node                        |
-| <kbd>J</kbd>    | jump to next undo node and undo to this state |
-| <kbd>K</kbd>    | jump to prev undo node and undo to this state |
-| <kbd>q</kbd>    | quit undotree                                 |
-| <kbd>p</kbd>    | jump into the undotree diff window            |
+| Mappings         | Action                                        |
+| ----             | ----                                          |
+| <kbd>j</kbd>     | jump to next undo node                        |
+| <kbd>k</kbd>     | jump to prev undo node                        |
+| <kbd>J</kbd>     | jump to next undo node and undo to this state |
+| <kbd>K</kbd>     | jump to prev undo node and undo to this state |
+| <kbd>q</kbd>     | quit undotree                                 |
+| <kbd>p</kbd>     | jump into the undotree diff window            |
 | <kbd>Enter</kbd> | undo to this state                            |
 
 
