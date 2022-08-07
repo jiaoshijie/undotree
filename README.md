@@ -6,6 +6,8 @@ A neovim undotree plugin written in lua.
 
 ![undotree](./screenshot/undotree.png)
 
+Diff previewer window shows the difference between the current node and the node under the cursor.
+
 ### Requirements
 
 - nvim 0.7.0 or above
@@ -47,7 +49,7 @@ Basic setup
 require('undotree').setup()
 ```
 
-If using [packer.nvim](https://github.com/wbthomason/packer.nvim) gitsigns can be setup directly in the plugin spec:
+If using [packer.nvim](https://github.com/wbthomason/packer.nvim) undotree can be setup directly in the plugin spec:
 
 ```lua
 use {
