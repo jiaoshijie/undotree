@@ -9,4 +9,11 @@ function _M.contains(table, item)
   return false
 end
 
+function _M.reverse_table(input, output)
+  -- NOTE: `output` must be a empty table
+  for i = #input, 1, -1 do
+    table.insert(output, input[i])
+  end
+end
+
 return _M

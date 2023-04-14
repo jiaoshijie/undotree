@@ -13,7 +13,6 @@ end
 
 function Diff:new()
   local obj = setmetatable({
-    -- TODO: maybe record current bufer number
     old_seq = nil,
     new_seq = nil,
     diff_info = {},
@@ -29,7 +28,7 @@ function Diff:set(old, new)
   self.diff_highlight = {}
 end
 
-function Diff:parseDiff(diff_lines)
+function Diff:parse_diff(diff_lines)
   for _, line in ipairs(diff_lines) do
     local ch = string.sub(line, 1, 1)
     if ch == '<' or ch == '>' then
@@ -44,7 +43,7 @@ function Diff:parseDiff(diff_lines)
   end
 end
 
-function Diff:updateDiff(src_buf, src_win, undo_win, old_seq, new_seq, seq_last)
+function Diff:update_diff(src_buf, src_win, undo_win, old_seq, new_seq, seq_last)
   if old_seq == self.old_seq and new_seq == self.new_seq then
     return
   end
@@ -61,8 +60,8 @@ function Diff:updateDiff(src_buf, src_win, undo_win, old_seq, new_seq, seq_last)
     undo2(old_seq, seq_last)
     vim.fn.winrestview(savedview)
     vim.cmd("noautocmd lua vim.api.nvim_set_current_win(" .. undo_win .. ")")
-    local tempfile1 = vim.fn.tempname()  -- old buf
-    local tempfile2 = vim.fn.tempname()  -- new buf
+    local tempfile1 = vim.fn.tempname() -- old buf
+    local tempfile2 = vim.fn.tempname() -- new buf
 
     local ok, err = pcall(vim.fn.writefile, old_buf_con, tempfile1)
     if not ok then
@@ -78,7 +77,7 @@ function Diff:updateDiff(src_buf, src_win, undo_win, old_seq, new_seq, seq_last)
     os.remove(tempfile1)
     os.remove(tempfile2)
 
-    self:parseDiff(diff_res)
+    self:parse_diff(diff_res)
   end
 end
 

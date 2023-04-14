@@ -1,10 +1,10 @@
-# Undotree
+# undotree
 
 A neovim undotree plugin written in lua.
 
 **Screenshot**
 
-![undotree](./screenshot/undotree.png)
+![preview](https://user-images.githubusercontent.com/43605101/232043141-f4318a13-8a85-41ee-bbb5-6f86511b32fe.png)
 
 Diff previewer window shows the difference between the current node and the node under the cursor.
 
@@ -71,7 +71,7 @@ local undotree = require('undotree')
 undotree.setup({
   float_diff = true,  -- using float window previews diff, set this `true` will disable layout option
   layout = "left_bottom", -- "left_bottom", "left_left_bottom"
-  ignore_filetype = { 'Undotree', 'UndotreeDiff', 'qf', 'TelescopePrompt', 'spectre_panel', 'tsplayground' },
+  ignore_filetype = { 'undotree', 'undotreeDiff', 'qf', 'TelescopePrompt', 'spectre_panel', 'tsplayground' },
   window = {
     winblend = 30,
   },
@@ -99,27 +99,18 @@ vim.keymap.set('n', '<leader>uc', require('undotree').close, { noremap = true, s
 
 2. Some Mappings
 
-| Mappings         | Action                                        |
-| ----             | ----                                          |
-| <kbd>j</kbd>     | jump to next undo node                        |
-| <kbd>k</kbd>     | jump to prev undo node                        |
-| <kbd>J</kbd>     | jump to next undo node and undo to this state |
-| <kbd>K</kbd>     | jump to prev undo node and undo to this state |
-| <kbd>q</kbd>     | quit undotree                                 |
-| <kbd>p</kbd>     | jump into the undotree diff window            |
-| <kbd>Enter</kbd> | undo to this state                            |
+| Mappings         | Action                                               |
+| ----             | ----                                                 |
+| <kbd>j</kbd>     | jump to next undo node                               |
+| <kbd>gj</kbd>    | jump to the parent node of the node under the cursor |
+| <kbd>k</kbd>     | jump to prev undo node                               |
+| <kbd>J</kbd>     | jump to next undo node and undo to this state        |
+| <kbd>K</kbd>     | jump to prev undo node and undo to this state        |
+| <kbd>q</kbd>     | quit undotree                                        |
+| <kbd>p</kbd>     | jump into the undotree diff window                   |
+| <kbd>Enter</kbd> | undo to this state                                   |
 
 
 ### License
 
 **MIT**
-
-## Reference
-
-- [how to write a neovim plugin in lua](https://dev.to/2nit/how-to-write-neovim-plugins-in-lua-5cca)
-- [undotree](https://github.com/mbbill/undotree)
-- [vim-mundo](https://github.com/simnalamburt/vim-mundo)
-- [Vim documentation: usr_32](http://vimdoc.sourceforge.net/htmldoc/usr_32.html)
-- [how is the undo tree used in vim](https://stackoverflow.com/questions/1088864/how-is-the-undo-tree-used-in-vim)
-- [Undo branching and Gundo.vim](http://vimcasts.org/episodes/undo-branching-and-gundo-vim/)
-- [Using undo branches](https://vim.fandom.com/wiki/Using_undo_branches)

@@ -1,9 +1,9 @@
 local action = {}
 
 local enter = function(collector)
-  local cseq = collector.undotree_info.asciimeta[#collector.undotree_info.charGraph - vim.fn.line('.') + 1].seq
+  local cseq = collector.undotree_info.line2seq[vim.fn.line('.')]
   collector:undo2(cseq)
-  collector:reflashDiff()
+  collector:reflash_diff()
 end
 
 function action.move_next(collector)
@@ -12,6 +12,13 @@ end
 
 function action.move_prev(collector)
   collector:move_selection(-1)
+end
+
+function action.move2parent(collector)
+  local cu = collector.undotree_info
+  local parent_seq = cu.seq2parent[cu.line2seq[vim.fn.line('.')]]
+  local lnum = cu.seq2line[parent_seq]
+  collector:move_selection(lnum - vim.fn.line('.'))
 end
 
 function action.move_change_next(collector)

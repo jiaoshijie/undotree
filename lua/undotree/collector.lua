@@ -1,5 +1,5 @@
 local conf = require('undotree.config')
-local Undotree = require('undotree.undotree')
+local undotree = require('undotree.undotree')
 local Diff = require("undotree.diff")
 local split_win = require("undotree.split_window")
 local action = require("undotree.action")
@@ -12,9 +12,9 @@ local Collector = {}
 Collector.__index = Collector
 
 local default_opt = {
-  float_diff = true,  -- set this `true` will disable layout option
-  ignore_filetype = { 'Undotree', 'UndotreeDiff', 'qf', 'TelescopePrompt', 'spectre_panel', 'tsplayground' },
-  undotree_info = Undotree:new(),
+  float_diff = true, -- set this `true` will disable layout option
+  ignore_filetype = { 'undotree', 'undotreeDiff', 'qf', 'TelescopePrompt', 'spectre_panel', 'tsplayground' },
+  undotree_info = undotree:new(),
   layout = "left_bottom", -- "left_bottom", "left_left_bottom"
   diff_previewer = Diff:new(),
   window = {
@@ -26,6 +26,7 @@ local default_opt = {
   keymaps = {
     ['j'] = "move_next",
     ['k'] = "move_prev",
+    ['gj'] = "move2parent",
     ['J'] = "move_change_next",
     ['K'] = "move_change_prev",
     ['<cr>'] = "action_enter",
@@ -34,21 +35,13 @@ local default_opt = {
   },
 }
 
-local reverseTable = function(input)
-  local ret = {}
-  for i = #input, 1, -1 do
-    table.insert(ret, input[i])
-  end
-  return ret
-end
-
-local findStar = function(lnum)
+local find_star = function(lnum)
   local line = vim.fn.getline(lnum)
   if line and line ~= "" then
     local col = 1
     while col <= #line do
       if string.sub(line, col, col) == "*" then
-        return true, col - 1  -- found, position
+        return true, col - 1 -- found, position
       end
       col = col + 1
     end
@@ -99,7 +92,7 @@ function Collector:new(opts)
   local obj = setmetatable({
     float_diff = if_nil(opts.float_diff, default_opt.float_diff),
     ignore_filetype = if_nil(opts.ignore_filetype, default_opt.ignore_filetype),
-    undotree_info = Undotree:new(),
+    undotree_info = undotree:new(),
     diff_previewer = Diff:new(),
     layout = if_nil(opts.layout, default_opt.layout),
   }, self)
@@ -142,11 +135,11 @@ function Collector:run()
   self.undotree_win = u_win
   self.undotree_bufnr = vim.api.nvim_win_get_buf(u_win)
 
-  vim.api.nvim_buf_set_option(self.undotree_bufnr, "filetype", "Undotree")
+  vim.api.nvim_buf_set_option(self.undotree_bufnr, "filetype", "undotree")
 
   local diff_win, diff_border = nil, nil
   if self.float_diff then
-    -- TODO: _ is diff_opts
+    -- NOTE: _ is diff_opts
     diff_win, _, diff_border = self:create_popup_win("", win_opts.diff_opts)
   else
     diff_win, _ = split_win:create("", win_opts.diff_opts)
@@ -156,9 +149,9 @@ function Collector:run()
   self.diff_border = diff_border
 
 
-  vim.api.nvim_buf_set_option(self.diff_bufnr, "filetype", "UndotreeDiff")
+  vim.api.nvim_buf_set_option(self.diff_bufnr, "filetype", "undotreeDiff")
 
-  self:reflashUndotree()
+  self:reflash_undotree(true)
 
   -- Always enter to undotree window
   vim.cmd("noautocmd lua vim.api.nvim_set_current_win(" .. self.undotree_win .. ")")
@@ -167,16 +160,15 @@ function Collector:run()
   for k, v in pairs(self.keymaps) do
     vim.keymap.set('n', k, function()
       action[v](self)
-    end, { noremap = true, silent = true, buffer = self.undotree_bufnr})
+    end, { noremap = true, silent = true, buffer = self.undotree_bufnr })
   end
 
-  -- TODO
-  local lnum = self.undotree_info.asciimeta[self.undotree_info.seq2index[self.undotree_info.seq_cur]].lnum
-  local _, col = findStar(lnum)
-  self:set_selection({lnum, col})
+  local lnum = self.undotree_info.seq2line[self.undotree_info.seq_cur]
+  local _, col = find_star(lnum)
+  self:set_selection({ lnum, col })
 
   local group = vim.api.nvim_create_augroup("Undotree_collector", { clear = true })
-  vim.api.nvim_create_autocmd({"BufDelete", "BufWipeout"}, {
+  vim.api.nvim_create_autocmd({ "BufDelete", "BufWipeout" }, {
     buffer = self.undotree_bufnr,
     group = group,
     callback = function()
@@ -185,7 +177,6 @@ function Collector:run()
       self.src_bufnr = nil
     end,
   })
-
 end
 
 function Collector:create_popup_win(bufnr, popup_opts)
@@ -195,7 +186,7 @@ function Collector:create_popup_win(bufnr, popup_opts)
   vim.api.nvim_win_set_option(win, "wrap", false)
   local border_win = opts and opts.border and opts.border.win_id
   if border_win then
-    vim.api.nvim_win_set_option(opts.border.win_id, "winblend", self.window.winblend)
+    vim.api.nvim_win_set_option(border_win, "winblend", self.window.winblend)
   end
   return win, opts, border_win
 end
@@ -225,7 +216,6 @@ function Collector:get_window_option(max_columns, max_lines)
     opts.diff_opts.width = math.floor((max_columns - opts.diff_opts.col) * 0.8)
     opts.diff_opts.borderchars = if_nil(self.window.borderchars, { "─", "│", "─", "│", "╭", "╮", "╯", "╰" })
     opts.diff_opts.title = "Diff Previewer"
-    -- TODO
     -- borderhighlight, highlight, titlehighlight
   else
     self.window.height = if_nil(self.window.height, 0)
@@ -234,7 +224,7 @@ function Collector:get_window_option(max_columns, max_lines)
     opts.diff_opts.enter = false
     if self.layout == "left_bottom" then
       opts.diff_opts.position = "bottom"
-    else  -- self.layout == "left_left_bottom"
+    else -- self.layout == "left_left_bottom"
       opts.diff_opts.position = "left_bottom"
     end
   end
@@ -242,18 +232,15 @@ function Collector:get_window_option(max_columns, max_lines)
   return opts
 end
 
-function Collector:reflashUndotree()
-  -- TODO: maybe have a `if condition ... end`
+function Collector:reflash_undotree(always_flash)
   vim.cmd("noautocmd lua vim.api.nvim_set_current_win(" .. self.src_winid .. ")")
 
-  self.undotree_info:getGraphTree()
-
-  local data = reverseTable(self.undotree_info.charGraph)
-
-  vim.api.nvim_buf_set_option(self.undotree_bufnr, "modifiable", true)
-  vim.api.nvim_buf_set_lines(self.undotree_bufnr, 0, -1, false, data )
-  vim.api.nvim_buf_set_option(self.undotree_bufnr, "modifiable", false)
-
+  local reflash = self.undotree_info:gen_graph_tree()
+  if always_flash == true or reflash == true then
+    vim.api.nvim_buf_set_option(self.undotree_bufnr, "modifiable", true)
+    vim.api.nvim_buf_set_lines(self.undotree_bufnr, 0, -1, false, self.undotree_info.char_graph)
+    vim.api.nvim_buf_set_option(self.undotree_bufnr, "modifiable", false)
+  end
 end
 
 function Collector:move_selection(change, not_reflash)
@@ -261,9 +248,9 @@ function Collector:move_selection(change, not_reflash)
   local col = 0
   local found = false
   while lnum >= 1 and lnum <= vim.fn.line('$') do
-    found, col = findStar(lnum)
+    found, col = find_star(lnum)
     if found then
-      self:set_selection({lnum, col}, not_reflash)
+      self:set_selection({ lnum, col }, not_reflash)
       return
     end
     lnum = lnum + change
@@ -273,18 +260,17 @@ end
 function Collector:set_selection(pos, not_reflash)
   vim.api.nvim_win_set_cursor(self.undotree_win, pos)
   if not not_reflash then
-    self:reflashDiff()
+    self:reflash_diff()
   end
 end
 
-function Collector:reflashDiff()
-  local info = self.undotree_info.asciimeta[#self.undotree_info.charGraph - vim.fn.line('.') + 1]
-  if info == nil then return end
-  local cursor_seq = info.seq
+function Collector:reflash_diff()
+  local cursor_seq = self.undotree_info.line2seq[vim.fn.line('.')]
+  if cursor_seq == nil then return end
   local cseq = self.undotree_info.seq_cur
   local seq_last = self.undotree_info.seq_last
 
-  self.diff_previewer:updateDiff(self.src_bufnr, self.src_winid, self.undotree_win, cseq, cursor_seq, seq_last)
+  self.diff_previewer:update_diff(self.src_bufnr, self.src_winid, self.undotree_win, cseq, cursor_seq, seq_last)
 
   vim.api.nvim_buf_set_option(self.diff_bufnr, "modifiable", true)
   vim.api.nvim_buf_set_lines(self.diff_bufnr, 0, -1, false, self.diff_previewer.diff_info)
@@ -296,12 +282,13 @@ end
 
 function Collector:set_marks(cseq)
   -- >num< : The current state
-  local ut_info = self.undotree_info
-
+  local seq_lnum = self.undotree_info.seq2line[cseq]
+  local prev_seq_lnum = self.undotree_info.seq2line[self.undotree_info.seq_cur_bak]
   vim.api.nvim_buf_set_option(self.undotree_bufnr, 'modifiable', true)
-  local seq_lnum = ut_info.asciimeta[ut_info.seq2index[cseq]].lnum
+  if prev_seq_lnum ~= nil then
+    vim.fn.setline(prev_seq_lnum, vim.fn.substitute(vim.fn.getline(prev_seq_lnum), '\\zs>\\(\\d\\+\\)<\\ze', '\\1', ''))
+  end
   vim.fn.setline(seq_lnum, vim.fn.substitute(vim.fn.getline(seq_lnum), '\\zs\\(\\d\\+\\)\\ze', '>\\1<', ''))
-  -- TODO: vim.fn.setline(seq_lnum, vim.fn.substitute(vim.fn.getline(seq_lnum), '\\zs>\\(\\d\\+\\)<\\ze', '\\1', ''))
   vim.api.nvim_buf_set_option(self.undotree_bufnr, 'modifiable', false)
 end
 
@@ -314,7 +301,7 @@ function Collector:undo2(cseq)
     cmd = string.format('silent exe "%s"', 'undo ' .. cseq)
   end
   vim.cmd(cmd)
-  self:reflashUndotree()
+  self:reflash_undotree(false)
   vim.cmd("noautocmd lua vim.api.nvim_set_current_win(" .. self.undotree_win .. ")")
   self:set_marks(cseq)
 end

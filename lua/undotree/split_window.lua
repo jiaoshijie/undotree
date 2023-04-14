@@ -10,10 +10,10 @@ local set_option = function(winid, bufnr)
   vim.api.nvim_win_set_option(winid, 'winfixwidth', true)
   vim.api.nvim_win_set_option(winid, 'wrap', false)
   vim.api.nvim_win_set_option(winid, 'spell', false)
-  vim.api.nvim_win_set_option(winid, 'cursorline', false)
+  vim.api.nvim_win_set_option(winid, 'cursorline', true)
   vim.api.nvim_win_set_option(winid, 'signcolumn', 'no')
   -- buf options --
-  vim.api.nvim_buf_set_option(bufnr, 'bufhidden', 'wipe')  -- TODO: or 'delete'
+  vim.api.nvim_buf_set_option(bufnr, 'bufhidden', 'wipe') -- NOTE: or 'delete'
   vim.api.nvim_buf_set_option(bufnr, 'buflisted', false)
   vim.api.nvim_buf_set_option(bufnr, 'buftype', 'nowrite')
   vim.api.nvim_buf_set_option(bufnr, 'swapfile', false)
