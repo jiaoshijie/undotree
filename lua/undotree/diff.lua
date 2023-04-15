@@ -28,21 +28,6 @@ function Diff:set(old, new)
   self.diff_highlight = {}
 end
 
-function Diff:parse_diff(diff_lines)
-  for _, line in ipairs(diff_lines) do
-    local ch = string.sub(line, 1, 1)
-    if ch == '<' or ch == '>' then
-      local prefix = ch == '<' and '- ' or '+ '
-      local hlgroup = ch == '<' and 'UndotreeDiffRemoved' or 'UndotreeDiffAdded'
-      table.insert(self.diff_info, prefix .. line:sub(3))
-      table.insert(self.diff_highlight, hlgroup)
-    elseif ch ~= '-' then
-      table.insert(self.diff_info, line)
-      table.insert(self.diff_highlight, 'UndotreeDiffLine')
-    end
-  end
-end
-
 function Diff:update_diff(src_buf, src_win, undo_win, old_seq, new_seq, seq_last)
   if old_seq == self.old_seq and new_seq == self.new_seq then
     return
@@ -60,24 +45,30 @@ function Diff:update_diff(src_buf, src_win, undo_win, old_seq, new_seq, seq_last
     undo2(old_seq, seq_last)
     vim.fn.winrestview(savedview)
     vim.cmd("noautocmd lua vim.api.nvim_set_current_win(" .. undo_win .. ")")
-    local tempfile1 = vim.fn.tempname() -- old buf
-    local tempfile2 = vim.fn.tempname() -- new buf
 
-    local ok, err = pcall(vim.fn.writefile, old_buf_con, tempfile1)
-    if not ok then
-      vim.api.nvim_err_writeln(err)
+    local on_hunk_callback = function(start_old, count_old, start_new, count_new)
+      table.insert(self.diff_info,
+        "@@ -" .. start_old .. "," .. count_old .. " " .. start_new .. "," .. count_new .. " @@")
+      table.insert(self.diff_highlight, "UndotreeDiffLine")
+      if count_old ~= 0 then
+        for i = 0, count_old - 1 do
+          table.insert(self.diff_info, "- " .. old_buf_con[start_old + i])
+          table.insert(self.diff_highlight, "UndotreeDiffRemoved")
+        end
+      end
+      if count_new ~= 0 then
+        for i = 0, count_new - 1 do
+          table.insert(self.diff_info, "+ " .. new_buf_con[start_new + i])
+          table.insert(self.diff_highlight, "UndotreeDiffAdded")
+        end
+      end
     end
-    ok, err = pcall(vim.fn.writefile, new_buf_con, tempfile2)
-    if not ok then
-      vim.api.nvim_err_writeln(err)
-    end
 
-    local diff_res = vim.fn.split(vim.fn.system('diff ' .. tempfile1 .. ' ' .. tempfile2), '\n')
-
-    os.remove(tempfile1)
-    os.remove(tempfile2)
-
-    self:parse_diff(diff_res)
+    vim.diff(table.concat(old_buf_con, '\n'), table.concat(new_buf_con, '\n'), {
+      result_type = "indices",
+      on_hunk = on_hunk_callback,
+      algorithm = "histogram",
+    })
   end
 end
 
