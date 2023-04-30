@@ -98,8 +98,8 @@ function Collector:new(opts)
   }, self)
 
   obj.window = vim.deepcopy(default_opt.window)
-  if opts.window and opts.window.winblend then
-    obj.window.winblend = opts.window.winblend
+  for k, v in pairs(opts.window) do
+    obj.window[k] = v
   end
 
   obj.keymaps = vim.deepcopy(default_opt.keymaps)
@@ -311,6 +311,7 @@ function Collector:close()
   win_delete(self.diff_win, true, true)
   win_delete(self.diff_border, true, true)
   self.src_bufnr = nil
+  vim.cmd("noautocmd lua vim.api.nvim_set_current_win(" .. self.src_winid .. ")")
 end
 
 return Collector
