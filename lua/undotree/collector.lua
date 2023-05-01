@@ -98,8 +98,10 @@ function Collector:new(opts)
   }, self)
 
   obj.window = vim.deepcopy(default_opt.window)
-  for k, v in pairs(opts.window) do
-    obj.window[k] = v
+  if opts.window then
+    for k, v in pairs(opts.window) do
+      obj.window[k] = v
+    end
   end
 
   obj.keymaps = vim.deepcopy(default_opt.keymaps)
