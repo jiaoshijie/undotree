@@ -139,19 +139,14 @@ function Collector:run()
 
   vim.api.nvim_buf_set_option(self.undotree_bufnr, "filetype", "undotree")
 
-  local diff_win, diff_border = nil, nil
   if self.float_diff then
     -- NOTE: _ is diff_opts
-    diff_win, _, diff_border = self:create_popup_win("", win_opts.diff_opts)
+    self.diff_win_opts = win_opts.diff_opts
   else
-    diff_win, _ = split_win:create("", win_opts.diff_opts)
+    self.diff_win, _ = split_win:create("", win_opts.diff_opts)
+    self.diff_bufnr = vim.api.nvim_win_get_buf(self.diff_win)
+    vim.api.nvim_buf_set_option(self.diff_bufnr, "filetype", "undotreeDiff")
   end
-  self.diff_bufnr = vim.api.nvim_win_get_buf(diff_win)
-  self.diff_win = diff_win
-  self.diff_border = diff_border
-
-
-  vim.api.nvim_buf_set_option(self.diff_bufnr, "filetype", "undotreeDiff")
 
   self:reflash_undotree(true)
 
@@ -270,6 +265,18 @@ function Collector:reflash_diff()
   local cursor_seq = self.undotree_info.line2seq[vim.fn.line('.')]
   if cursor_seq == nil then return end
   local cseq = self.undotree_info.seq_cur
+  if self.float_diff then
+    if cursor_seq == cseq then
+      win_delete(self.diff_win, true, true)
+      win_delete(self.diff_border, true, true)
+      self.diff_bufnr = nil
+      return
+    elseif not self.diff_bufnr then
+      self.diff_win, _, self.diff_border = self:create_popup_win("", self.diff_win_opts)
+      self.diff_bufnr = vim.api.nvim_win_get_buf(self.diff_win)
+      vim.api.nvim_buf_set_option(self.diff_bufnr, "filetype", "undotreeDiff")
+    end
+  end
   local seq_last = self.undotree_info.seq_last
 
   self.diff_previewer:update_diff(self.src_bufnr, self.src_winid, self.undotree_win, cseq, cursor_seq, seq_last)
