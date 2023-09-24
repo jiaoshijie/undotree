@@ -49,7 +49,7 @@ Using [lazy.nvim](https://github.com/folke/lazy.nvim)
   dependencies = "nvim-lua/plenary.nvim",
   config = true,
   keys = { -- load the plugin only when using it's keybinding:
-    { "<leader>u", "lua require('undotree').toggle()" },
+    { "<leader>u", "<cmd>lua require('undotree').toggle()<cr>" },
   },
 }
 ```
