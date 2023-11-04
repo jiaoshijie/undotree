@@ -16,6 +16,7 @@ local default_opt = {
   ignore_filetype = { 'undotree', 'undotreeDiff', 'qf', 'TelescopePrompt', 'spectre_panel', 'tsplayground' },
   undotree_info = undotree:new(),
   layout = "left_bottom", -- "left_bottom", "left_left_bottom"
+  position = "left", -- "right", "bottom"
   diff_previewer = Diff:new(),
   window = {
     winblend = 30,
@@ -95,6 +96,7 @@ function Collector:new(opts)
     undotree_info = undotree:new(),
     diff_previewer = Diff:new(),
     layout = if_nil(opts.layout, default_opt.layout),
+    position = if_nil(opts.position, default_opt.position),
   }, self)
 
   obj.window = vim.deepcopy(default_opt.window)
@@ -195,7 +197,7 @@ function Collector:get_window_option(max_columns, max_lines)
   self.window.width = if_nil(self.window.width, 0)
   local width = math.max(self.window.width, min_columns)
   opts.undotree_opts.size = math.min(width, max_columns)
-  opts.undotree_opts.position = "left"
+  opts.undotree_opts.position = self.position
   if not self.float_diff and self.layout == "left_left_bottom" then
     opts.undotree_opts.enter = true
   else
@@ -205,14 +207,19 @@ function Collector:get_window_option(max_columns, max_lines)
   if self.float_diff then
     opts.diff_opts.border = true
     opts.diff_opts.enter = false
-    opts.diff_opts.col = opts.undotree_opts.size + 10
     local height = math.floor(max_lines * 0.8)
     opts.diff_opts.line = math.floor((max_lines - height) / 2)
     opts.diff_opts.height = height
     opts.diff_opts.minheight = height
-    opts.diff_opts.width = math.floor((max_columns - opts.diff_opts.col) * 0.8)
     opts.diff_opts.borderchars = if_nil(self.window.borderchars, { "─", "│", "─", "│", "╭", "╮", "╯", "╰" })
     opts.diff_opts.title = "Diff Previewer"
+    if self.position == "right" then
+      opts.diff_opts.col = opts.undotree_opts.size - 15
+      opts.diff_opts.width = math.floor((max_columns - (opts.undotree_opts.size + 10)) * 0.8)
+    else
+      opts.diff_opts.col = opts.undotree_opts.size + 10
+      opts.diff_opts.width = math.floor((max_columns - opts.diff_opts.col) * 0.8)
+    end
     -- borderhighlight, highlight, titlehighlight
   else
     self.window.height = if_nil(self.window.height, 0)
