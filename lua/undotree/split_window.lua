@@ -30,6 +30,9 @@ function split_window:create(what, opts)
     size = if_nil(opts.size, math.floor(vim.o.lines * 0.30))
   elseif opts.position == "left_bottom" then
     size = if_nil(opts.size, math.floor(vim.o.lines * 0.35))
+  elseif opts.position == "right" then
+    table.insert(c_win_command, "botright vertical")
+    size = if_nil(opts.size, math.floor(vim.o.columns * 0.25))
   else -- DEFAULT: opts.postion == "left"
     table.insert(c_win_command, "topleft vertical")
     size = if_nil(opts.size, math.floor(vim.o.columns * 0.25))
