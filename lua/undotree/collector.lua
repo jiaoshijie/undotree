@@ -194,9 +194,17 @@ function Collector:get_window_option(max_columns, max_lines)
   local min_columns, min_lines = math.floor(max_columns * 0.25), math.floor(max_lines * 0.30)
   local opts = { undotree_opts = {}, diff_opts = {} }
 
-  self.window.width = if_nil(self.window.width, 0)
-  local width = math.max(self.window.width, min_columns)
-  opts.undotree_opts.size = math.min(width, max_columns)
+  if self.position == "bottom" then
+    -- `size` is the height of the undotree_window
+    self.window.height = if_nil(self.window.height, 0)
+    local height = math.max(self.window.height, min_lines)
+    opts.undotree_opts.size = math.min(height, max_lines)
+  else  -- self.positon == "left" or "right"
+    -- `size` is the width of the undotree_window
+    self.window.width = if_nil(self.window.width, 0)
+    local width = math.max(self.window.width, min_columns)
+    opts.undotree_opts.size = math.min(width, max_columns)
+  end
   opts.undotree_opts.position = self.position
   if not self.float_diff and self.layout == "left_left_bottom" then
     opts.undotree_opts.enter = true
@@ -216,9 +224,12 @@ function Collector:get_window_option(max_columns, max_lines)
     if self.position == "right" then
       opts.diff_opts.col = opts.undotree_opts.size - 15
       opts.diff_opts.width = math.floor((max_columns - (opts.undotree_opts.size + 10)) * 0.8)
-    else
+    elseif self.position == "left" then
       opts.diff_opts.col = opts.undotree_opts.size + 10
       opts.diff_opts.width = math.floor((max_columns - opts.diff_opts.col) * 0.8)
+    else  -- self.position == "bottom"
+      opts.diff_opts.col = math.floor(max_columns * 0.15)
+      opts.diff_opts.width = math.floor(max_columns * 0.7)
     end
     -- borderhighlight, highlight, titlehighlight
   else
