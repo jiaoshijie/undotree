@@ -320,6 +320,9 @@ function Collector:set_marks(cseq)
 end
 
 function Collector:undo2(cseq)
+  if cseq == nil then
+    return
+  end
   vim.cmd("noautocmd lua vim.api.nvim_set_current_win(" .. self.src_winid .. ")")
   local cmd
   if cseq == 0 then
