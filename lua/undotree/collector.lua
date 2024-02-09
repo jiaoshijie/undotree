@@ -288,6 +288,7 @@ function Collector:reflash_diff()
       win_delete(self.diff_win, true, true)
       win_delete(self.diff_border, true, true)
       self.diff_bufnr = nil
+      self.diff_win = nil
       return
     elseif not self.diff_bufnr then
       self.diff_win, _, self.diff_border = self:create_popup_win("", self.diff_win_opts)

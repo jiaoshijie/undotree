@@ -36,7 +36,11 @@ function action.action_enter(collector)
 end
 
 function action.enter_diffbuf(collector)
-  vim.cmd("noautocmd lua vim.api.nvim_set_current_win(" .. collector.diff_win .. ")")
+  if collector.diff_win then
+    vim.cmd("noautocmd lua vim.api.nvim_set_current_win(" .. collector.diff_win .. ")")
+  else
+    vim.api.nvim_err_writeln("There is no diff window found!!!")
+  end
 end
 
 function action.quit(collector)
