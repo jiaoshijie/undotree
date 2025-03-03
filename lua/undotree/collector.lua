@@ -25,14 +25,19 @@ local default_opt = {
     width = 0,
   },
   keymaps = {
-    ['j'] = "move_next",
-    ['k'] = "move_prev",
-    ['gj'] = "move2parent",
-    ['J'] = "move_change_next",
-    ['K'] = "move_change_prev",
-    ['<cr>'] = "action_enter",
-    ['p'] = "enter_diffbuf",
-    ['q'] = "quit",
+    undotree = {
+        ["j"] = "move_next",
+        ["k"] = "move_prev",
+        ["gj"] = "move2parent",
+        ["J"] = "move_change_next",
+        ["K"] = "move_change_prev",
+        ["<cr>"] = "action_enter",
+        ["p"] = "enter_diffbuf",
+        ["q"] = "quit",
+    },
+    undotreeDiff = {
+        ["q"] = "quit",
+    },
   },
 }
 
@@ -113,6 +118,8 @@ function Collector:new(opts)
     end
   end
 
+  conf.setKeybinds(obj)
+
   return obj
 end
 
@@ -155,12 +162,6 @@ function Collector:run()
   -- Always enter to undotree window
   vim.cmd("noautocmd lua vim.api.nvim_set_current_win(" .. self.undotree_win .. ")")
   self:set_marks(self.undotree_info.seq_cur)
-
-  for k, v in pairs(self.keymaps) do
-    vim.keymap.set('n', k, function()
-      action[v](self)
-    end, { noremap = true, silent = true, buffer = self.undotree_bufnr })
-  end
 
   local lnum = self.undotree_info.seq2line[self.undotree_info.seq_cur]
   local _, col = find_star(lnum)
