@@ -110,14 +110,9 @@ function Collector:new(opts)
       obj.window[k] = v
     end
   end
-
-  obj.keymaps = vim.deepcopy(default_opt.keymaps)
-  if opts.keymaps then
-    for k, v in pairs(opts.keymaps) do
-      obj.keymaps[k] = v
-    end
-  end
-
+  
+  local keymaps = vim.tbl_deep_extend("keep", opts.keymaps, default_opt.keymaps)
+  obj.keymaps = keymaps
   conf.setKeybinds(obj)
 
   return obj
