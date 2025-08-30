@@ -1,5 +1,3 @@
----@module 'undotree.collector'
-
 local function enter(collector)
   if not collector then
     return

@@ -1,6 +1,8 @@
 ---@class UndoTreeConfig
 local M = {}
 
+---@param T table
+---@return table T
 function M.reverse_table(T)
   local len = #T
 

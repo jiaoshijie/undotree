@@ -9,7 +9,10 @@ local if_nil = vim.F.if_nil
 
 ---@class UndoTreeCollector.Opts
 local default_opt = {
+  ---@type boolean
   float_diff = true, -- set this `true` will disable layout option
+
+  ---@type string[]
   ignore_filetype =  {
     'undotree',
     'undotreeDiff',
@@ -18,16 +21,28 @@ local default_opt = {
     'spectre_panel',
     'tsplayground',
   },
-  undotree_info = undotree:new(),
-  layout = "left_bottom", -- "left_bottom", "left_left_bottom"
-  position = "left", -- "right", "bottom"
+
+  ---@type UndoTree
+  undotree_info = undotree.new(),
+
+  ---@type "left_bottom"|"left_left_bottom"
+  layout = "left_bottom",
+
+  ---@type "left"|"right"|"bottom"
+  position = "left",
+
+  ---@type UndoTreeDiff
   diff_previewer = Diff:new(),
+
+  ---@class UndoTreeCollector.WinOpts
   window = {
     winblend = 30,
     -- TODO: maybe change it to a suitable number
     height = 0,
     width = 0,
   },
+
+  ---@type table<string, string>
   keymaps = {
     j = "move_next",
     k = "move_prev",
@@ -40,21 +55,30 @@ local default_opt = {
   },
 }
 
-
+---@param lnum string|integer
+---@return boolean
+---@return integer
 local function find_star(lnum)
+  local found, pos = false, 0
   local line = vim.fn.getline(lnum)
+
   if not line or line == "" then
-    return false, 0
+    return found, pos
   end
+
   local col = 1
   while col <= #line do
-    if string.sub(line, col, col) == "*" then
-      return true, col - 1 -- found, position
+    if line:sub(col, col) == "*" then
+      found, pos = true, col - 1 -- found, position
+      break
     end
     col = col + 1
   end
+
+  return found, pos
 end
 
+---@param bufnr? integer
 local function buf_delete(bufnr)
   if bufnr == nil then
     return
@@ -75,13 +99,17 @@ local function buf_delete(bufnr)
   end
 end
 
+---@param win_id integer
+---@param force boolean
+---@param bdelete? boolean
 local function win_delete(win_id, force, bdelete)
-  if win_id == nil or not vim.api.nvim_win_is_valid(win_id) then
+  if win_id == nil or type(win_id) ~= 'number' or not vim.api.nvim_win_is_valid(win_id) then
     return
   end
 
   local bufnr = vim.api.nvim_win_get_buf(win_id)
-  if bdelete then
+
+  if bdelete ~= nil and bdelete then
     buf_delete(bufnr)
   end
 
@@ -95,9 +123,11 @@ end
 ---@class UndoTreeCollector: UndoTreeCollector.Opts
 local Collector = {}
 
-function Collector:new(opts)
+---@param opts? UndoTreeCollector.Opts
+function Collector.new(opts)
   opts = opts or {}
 
+  ---@type UndoTreeCollector
   local obj = setmetatable(vim.tbl_deep_extend('keep', opts, default_opt, Collector), {
     __index = Collector,
   })
@@ -110,31 +140,31 @@ function Collector:run()
     return
   end
 
-  self.src_winid = vim.fn.win_getid()
-  self.src_bufnr = vim.fn.bufnr()
+  self.src_winid = vim.api.nvim_get_current_win()
+  self.src_bufnr = vim.api.nvim_get_current_buf()
 
   local line_count = vim.o.lines - vim.o.cmdheight
   if vim.o.ls ~= 0 then
     line_count = line_count - 1
   end
+
   if vim.fn.exists('+winbar') ~= 0 and vim.o.winbar ~= "" then
     line_count = line_count - 1
   end
 
   local win_opts = self:get_window_option(vim.o.columns, line_count)
-  local u_win, _ = split_win:create("", win_opts.undotree_opts)
+  local u_win = split_win:create("", win_opts.undotree_opts)
 
-  self.undotree_win = u_win
-  self.undotree_bufnr = vim.api.nvim_win_get_buf(u_win)
+  self.undotree_win, self.undotree_bufnr = u_win, vim.api.nvim_win_get_buf(u_win)
 
   vim.api.nvim_set_option_value("filetype", "undotree", { buf = self.undotree_bufnr })
 
   if self.float_diff then
-    -- NOTE: _ is diff_opts
     self.diff_win_opts = win_opts.diff_opts
   else
-    self.diff_win, _ = split_win:create("", win_opts.diff_opts)
+    self.diff_win = split_win:create("", win_opts.diff_opts)
     self.diff_bufnr = vim.api.nvim_win_get_buf(self.diff_win)
+
     vim.api.nvim_set_option_value("filetype", "undotreeDiff", { buf = self.diff_bufnr })
   end
 
@@ -178,9 +208,18 @@ function Collector:create_popup_win(bufnr, popup_opts)
   return win, opts, border_win
 end
 
+---@param max_columns integer
+---@param max_lines integer
+---@return UndoWinTree
 function Collector:get_window_option(max_columns, max_lines)
   local min_columns, min_lines = math.floor(max_columns * 0.25), math.floor(max_lines * 0.30)
-  local opts = { undotree_opts = {}, diff_opts = {} }
+
+  ---@class UndoWinTree
+  local opts = {}
+  ---@class UndoWinTree.Opts
+  ---@field enter? boolean
+  opts.undotree_opts = {}
+  opts.diff_opts = {}
 
   if self.position == "bottom" then
     -- `size` is the height of the undotree_window
@@ -201,14 +240,16 @@ function Collector:get_window_option(max_columns, max_lines)
   end
 
   if self.float_diff then
+    local height = math.floor(max_lines * 0.8)
+
     opts.diff_opts.border = true
     opts.diff_opts.enter = false
-    local height = math.floor(max_lines * 0.8)
     opts.diff_opts.line = math.floor((max_lines - height) / 2)
     opts.diff_opts.height = height
     opts.diff_opts.minheight = height
     opts.diff_opts.borderchars = if_nil(self.window.borderchars, { "─", "│", "─", "│", "╭", "╮", "╯", "╰" })
     opts.diff_opts.title = "Diff Previewer"
+
     if self.position == "right" then
       opts.diff_opts.col = opts.undotree_opts.size - 15
       opts.diff_opts.width = math.floor((max_columns - (opts.undotree_opts.size + 10)) * 0.8)
@@ -225,16 +266,13 @@ function Collector:get_window_option(max_columns, max_lines)
     local height = math.max(self.window.height, min_lines)
     opts.diff_opts.size = math.min(height, max_lines)
     opts.diff_opts.enter = false
-    if self.layout == "left_bottom" then
-      opts.diff_opts.position = "bottom"
-    else -- self.layout == "left_left_bottom"
-      opts.diff_opts.position = "left_bottom"
-    end
+    opts.diff_opts.position = self.layout == "left_bottom" and "bottom" or "left_botom"
   end
 
   return opts
 end
 
+---@param always_flash boolean
 function Collector:reflash_undotree(always_flash)
   vim.cmd("noautocmd lua vim.api.nvim_set_current_win(" .. self.src_winid .. ")")
 
