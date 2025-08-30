@@ -1,19 +1,14 @@
-local _M = {}
+---@class UndoTreeConfig
+local M = {}
 
-function _M.contains(table, item)
-  for _, v in ipairs(table) do
-    if v == item then
-      return true
-    end
+function M.reverse_table(T)
+  local len = #T
+
+  for i = 1, math.floor(len / 2), 1 do
+    T[i], T[len - i + 1] = T[len - i + 1], T[i]
   end
-  return false
+
+  return T
 end
 
-function _M.reverse_table(input, output)
-  -- NOTE: `output` must be a empty table
-  for i = #input, 1, -1 do
-    table.insert(output, input[i])
-  end
-end
-
-return _M
+return M
