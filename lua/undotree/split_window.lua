@@ -9,21 +9,21 @@ local function set_option(winid, bufnr)
   local buf_opt, win_opt = { buf = bufnr }, { win = winid }
 
   -- window options --
-  vim.api.nvim_set_option_value('number', false, win_opt)
-  vim.api.nvim_set_option_value('relativenumber', false, win_opt)
-  vim.api.nvim_set_option_value('winfixwidth', true, win_opt)
-  vim.api.nvim_set_option_value('wrap', false, win_opt)
-  vim.api.nvim_set_option_value('spell', false, win_opt)
-  vim.api.nvim_set_option_value('cursorline', true, win_opt)
-  vim.api.nvim_set_option_value('signcolumn', 'no', win_opt)
+  vim.api.nvim_set_option_value("number", false, win_opt)
+  vim.api.nvim_set_option_value("relativenumber", false, win_opt)
+  vim.api.nvim_set_option_value("winfixwidth", true, win_opt)
+  vim.api.nvim_set_option_value("wrap", false, win_opt)
+  vim.api.nvim_set_option_value("spell", false, win_opt)
+  vim.api.nvim_set_option_value("cursorline", true, win_opt)
+  vim.api.nvim_set_option_value("signcolumn", "no", win_opt)
 
   -- buf options --
-  vim.api.nvim_set_option_value('bufhidden', 'wipe', buf_opt) -- NOTE: or 'delete'
-  vim.api.nvim_set_option_value('buflisted', false, buf_opt)
-  vim.api.nvim_set_option_value('buftype', 'nowrite', buf_opt)
-  vim.api.nvim_set_option_value('swapfile', false, buf_opt)
+  vim.api.nvim_set_option_value("bufhidden", "wipe", buf_opt) -- NOTE: or 'delete'
+  vim.api.nvim_set_option_value("buflisted", false, buf_opt)
+  vim.api.nvim_set_option_value("buftype", "nowrite", buf_opt)
+  vim.api.nvim_set_option_value("swapfile", false, buf_opt)
   -- vim.api.nvim_set_option_value('filetype', 'undotree', buf_opt)
-  vim.api.nvim_set_option_value('modifiable', false, buf_opt)
+  vim.api.nvim_set_option_value("modifiable", false, buf_opt)
 end
 
 ---@class UndoTreeSplitWindow

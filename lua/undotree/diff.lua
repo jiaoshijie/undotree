@@ -3,7 +3,8 @@ local fmt = string.format
 ---@param cseq integer
 ---@param seq_last integer
 local function undo2(cseq, seq_last)
-  local cmd = fmt('silent exe "%s"', (cseq == 0 and ('norm!' .. seq_last .. 'u') or ('undo' .. cseq)))
+  local cmd =
+    fmt('silent exe "%s"', (cseq == 0 and ("norm!" .. seq_last .. "u") or ("undo" .. cseq)))
   vim.cmd(cmd)
 end
 
@@ -44,8 +45,8 @@ function Diff:update_diff(src_buf, src_win, undo_win, old_seq, new_seq, seq_last
     return
   end
   self:set(old_seq, new_seq)
-  table.insert(self.diff_info, old_seq .. ' --> ' .. new_seq)
-  table.insert(self.diff_highlight, 'UndotreeDiffLine')
+  table.insert(self.diff_info, old_seq .. " --> " .. new_seq)
+  table.insert(self.diff_highlight, "UndotreeDiffLine")
 
   if old_seq == new_seq then
     return
@@ -60,7 +61,10 @@ function Diff:update_diff(src_buf, src_win, undo_win, old_seq, new_seq, seq_last
   vim.cmd("noautocmd lua vim.api.nvim_set_current_win(" .. undo_win .. ")")
 
   local on_hunk_callback = function(start_old, count_old, start_new, count_new)
-    table.insert(self.diff_info, fmt("@@ -%s,%s ,%s @@", start_old, count_old, start_new, count_new))
+    table.insert(
+      self.diff_info,
+      fmt("@@ -%s,%s ,%s @@", start_old, count_old, start_new, count_new)
+    )
     table.insert(self.diff_highlight, "UndotreeDiffLine")
     if count_old ~= 0 then
       for i = 0, count_old - 1 do
@@ -76,7 +80,7 @@ function Diff:update_diff(src_buf, src_win, undo_win, old_seq, new_seq, seq_last
     end
   end
 
-  vim.diff(table.concat(old_buf_con, '\n'), table.concat(new_buf_con, '\n'), {
+  vim.diff(table.concat(old_buf_con, "\n"), table.concat(new_buf_con, "\n"), {
     result_type = "indices",
     on_hunk = on_hunk_callback,
     algorithm = "histogram",
