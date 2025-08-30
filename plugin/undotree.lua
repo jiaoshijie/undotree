@@ -14,3 +14,5 @@ local highlights = {
 for k, v in pairs(highlights) do
   vim.api.nvim_set_hl(0, k, v)
 end
+
+-- vim:ts=2:sts=2:sw=2:et:ai:si:sta:

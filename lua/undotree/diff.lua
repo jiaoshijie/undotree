@@ -75,3 +75,5 @@ function Diff:update_diff(src_buf, src_win, undo_win, old_seq, new_seq, seq_last
 end
 
 return Diff
+
+-- vim:ts=2:sts=2:sw=2:et:ai:si:sta:
