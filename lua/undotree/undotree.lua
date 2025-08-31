@@ -50,7 +50,7 @@ local function parse_entries(input, output)
     return
   end
 
-  for _, n in next, input do
+  for _, n in ipairs(input) do
     local new_node = Node.new(n.seq, n.time, n.save)
 
     if n.alt ~= nil then
@@ -62,12 +62,13 @@ local function parse_entries(input, output)
   end
 end
 
+---@param tree UndoTreeNode
 local function gen_indentions(tree, indent)
   tree.indent = indent
 
   local ind = tree.indent
 
-  for i, n in next, tree.children do
+  for i, n in ipairs(tree.children) do
     if i ~= 1 then
       ind = ind + 1
     end
@@ -120,7 +121,7 @@ local function draw(tree, graph, line2seq, other_info, seq, parent_ind)
     return true
   end
 
-  for _, n in next, tree.children do
+  for _, n in ipairs(tree.children) do
     if draw(n, graph, line2seq, other_info, seq, tree.indent) then
       return true
     end
