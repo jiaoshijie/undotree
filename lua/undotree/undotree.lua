@@ -22,12 +22,13 @@ local function time_ago(ptime)
 end
 
 ---@class UndoTreeNode
----@field seq? any}
----@field time? any}
----@field save? any}
+---@field seq? any
+---@field time? any
+---@field save? any
 ---@field alt? UndoTreeNode[]
 ---@field indent? any
 ---@field children? UndoTreeNode[]
+---@field parent? any
 local Node = {}
 
 function Node.new(seq, time, save)
