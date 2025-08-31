@@ -223,12 +223,12 @@ function Collector:get_window_option(max_columns, max_lines)
 
   if self.position == "bottom" then
     -- `size` is the height of the undotree_window
-    self.window.height = if_nil(self.window.height, 0)
+    self.window.height = self.window.height or 0
     local height = math.max(self.window.height, min_lines)
     opts.undotree_opts.size = math.min(height, max_lines)
   else -- self.positon == "left" or "right"
     -- `size` is the width of the undotree_window
-    self.window.width = if_nil(self.window.width, 0)
+    self.window.width = self.window.width or 0
     local width = math.max(self.window.width, min_columns)
     opts.undotree_opts.size = math.min(width, max_columns)
   end

@@ -22,9 +22,9 @@ local function time_ago(ptime)
 end
 
 ---@class UndoTreeNode
----@field seq? any
----@field time? any
----@field save? any
+---@field seq? integer
+---@field time? integer
+---@field save? integer
 ---@field alt? UndoTreeNode[]
 ---@field indent? any
 ---@field children? UndoTreeNode[]
@@ -43,7 +43,7 @@ function Node.new(seq, time, save)
   return node
 end
 
----@param input UndoTreeNode[]
+---@param input vim.fn.undotree.ret
 ---@param output UndoTreeNode
 local function parse_entries(input, output)
   if vim.tbl_isempty(input) then
@@ -93,6 +93,7 @@ local function set_line(graph, index, char, indent)
   end
 end
 
+---@param tree UndoTreeNode
 local function draw(tree, graph, line2seq, other_info, seq, parent_ind)
   if tree.seq == seq then
     local parent_lnum = other_info[tree.parent].lnum
