@@ -9,8 +9,8 @@ local function undo2(cseq, seq_last)
 end
 
 ---@class UndoTreeDiff
----@field old_seq integer
----@field new_seq integer
+---@field old_seq integer|nil
+---@field new_seq integer|nil
 ---@field diff_info table
 ---@field diff_highlight table
 local Diff = {}
@@ -44,22 +44,31 @@ function Diff:update_diff(src_buf, src_win, undo_win, old_seq, new_seq, seq_last
   if old_seq == self.old_seq and new_seq == self.new_seq then
     return
   end
+
   self:set(old_seq, new_seq)
-  table.insert(self.diff_info, old_seq .. " --> " .. new_seq)
+  table.insert(self.diff_info, fmt("%s --> %s", old_seq, new_seq))
   table.insert(self.diff_highlight, "UndotreeDiffLine")
 
   if old_seq == new_seq then
     return
   end
+
   local old_buf_con = vim.api.nvim_buf_get_lines(src_buf, 0, -1, false)
   vim.cmd("noautocmd lua vim.api.nvim_set_current_win(" .. src_win .. ")")
+
   local savedview = vim.fn.winsaveview()
   undo2(new_seq, seq_last)
+
   local new_buf_con = vim.api.nvim_buf_get_lines(src_buf, 0, -1, false)
   undo2(old_seq, seq_last)
+
   vim.fn.winrestview(savedview)
   vim.cmd("noautocmd lua vim.api.nvim_set_current_win(" .. undo_win .. ")")
 
+  ---@param start_old integer
+  ---@param count_old integer
+  ---@param start_new integer
+  ---@param count_new integer
   local on_hunk_callback = function(start_old, count_old, start_new, count_new)
     table.insert(
       self.diff_info,

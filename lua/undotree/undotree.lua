@@ -1,6 +1,9 @@
+local fmt = string.format
+
 local conf = require("undotree.config")
 
 ---@param ptime integer
+---@return string
 local function time_ago(ptime)
   local mf, sec = math.floor, vim.fn.localtime() - ptime
 
@@ -8,17 +11,21 @@ local function time_ago(ptime)
 
   if sec < 60 then
     mft = mf(sec)
-    return "(" .. mft .. (mft > 1 and " secs ago)" or " sec ago)")
-  elseif sec < 3600 then
+    return fmt("(%s %s ago)", mft, (mft > 1 and "secs" or "sec"))
+  end
+
+  if sec < 3600 then
     mft = mf(sec / 60)
-    return "(" .. mft .. (mft > 1 and " mins ago)" or " sec ago)")
-  elseif sec < 86400 then
+    return fmt("(%s %s ago)", mft, (mft > 1 and "mins" or "min"))
+  end
+
+  if sec < 86400 then
     mft = mf(sec / 3600)
-    return "(" .. mft .. (mft > 1 and " hours ago)" or " hour ago)")
+    return fmt("(%s %s ago)", mft, (mft > 1 and "hours" or "hour"))
   end
 
   mft = mf(sec / 86400)
-  return "(" .. mft .. (mft > 1 and " days ago)" or " day ago)")
+  return fmt("(%s %s ago)", mft, (mft > 1 and "days" or "day"))
 end
 
 ---@class UndoTreeNode
@@ -31,8 +38,8 @@ end
 ---@field parent? any
 local Node = {}
 
+---@return UndoTreeNode|vim.fn.undotree.ret node
 function Node.new(seq, time, save)
-  ---@type UndoTreeNode
   local node = setmetatable({
     seq = seq,
     time = time,
@@ -130,6 +137,11 @@ local function draw(tree, graph, line2seq, other_info, seq, parent_ind)
   return false
 end
 
+---@param tree UndoTreeNode
+---@param graph table
+---@param line2seq table
+---@param other_info table
+---@param last_seq integer
 local function gen_graph(tree, graph, line2seq, other_info, last_seq)
   local cur_seq = 1
   while cur_seq <= last_seq do

@@ -5,8 +5,6 @@ local action = require("undotree.action")
 
 local popup = require("plenary.popup")
 
-local if_nil = vim.F.if_nil
-
 ---@class UndoTreeCollector.Opts
 local default_opt = {
   ---@type boolean
@@ -35,6 +33,7 @@ local default_opt = {
   diff_previewer = Diff:new(),
 
   ---@class UndoTreeCollector.WinOpts
+  ---@field borderchars? string[]
   window = {
     winblend = 30,
     -- TODO: maybe change it to a suitable number
@@ -127,7 +126,6 @@ local Collector = {}
 function Collector.new(opts)
   opts = opts or {}
 
-  ---@type UndoTreeCollector
   local obj = setmetatable(vim.tbl_deep_extend("keep", opts, default_opt, Collector), {
     __index = Collector,
   })
@@ -247,8 +245,7 @@ function Collector:get_window_option(max_columns, max_lines)
     opts.diff_opts.line = math.floor((max_lines - height) / 2)
     opts.diff_opts.height = height
     opts.diff_opts.minheight = height
-    opts.diff_opts.borderchars =
-      if_nil(self.window.borderchars, { "─", "│", "─", "│", "╭", "╮", "╯", "╰" })
+    opts.diff_opts.borderchars = self.window.borderchars or { "─", "│", "─", "│", "╭", "╮", "╯", "╰" }
     opts.diff_opts.title = "Diff Previewer"
 
     if self.position == "right" then
@@ -263,7 +260,7 @@ function Collector:get_window_option(max_columns, max_lines)
     end
     -- borderhighlight, highlight, titlehighlight
   else
-    self.window.height = if_nil(self.window.height, 0)
+    self.window.height = self.window.height or 0
     local height = math.max(self.window.height, min_lines)
     opts.diff_opts.size = math.min(height, max_lines)
     opts.diff_opts.enter = false

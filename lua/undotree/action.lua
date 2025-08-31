@@ -1,3 +1,6 @@
+---@module 'undotree.collector'
+
+---@param collector? UndoTreeCollector
 local function enter(collector)
   if not collector then
     return
