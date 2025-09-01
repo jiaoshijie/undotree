@@ -1,6 +1,10 @@
 local fmt = string.format
 
----@alias OtherInfo { save: integer, time: integer, lnum: integer, parent: integer }[]
+---@class OtherInfo
+---@field save integer
+---@field time integer
+---@field lnum integer
+---@field parent integer
 
 local conf = require("undotree.config")
 
@@ -44,17 +48,16 @@ local Node = {}
 ---@param save integer|nil
 ---@return UndoTreeNode node
 function Node.new(seq, time, save)
-  local node = setmetatable({
-    seq = seq,
-    time = time,
-    save = save,
-    children = {},
-  }, { __index = Node })
+  local node = setmetatable({}, { __index = Node })
+  node.seq = seq
+  node.time = time
+  node.save = save
+  node.children = {}
 
   return node
 end
 
----@param input vim.fn.undotree.entry[]|UndoTreeNode
+---@param input vim.fn.undotree.entry[]
 ---@param output UndoTreeNode
 local function parse_entries(input, output)
   if vim.tbl_isempty(input) then
@@ -110,7 +113,7 @@ end
 ---@param tree UndoTreeNode
 ---@param graph string[]
 ---@param line2seq integer[]
----@param other_info OtherInfo
+---@param other_info OtherInfo[]
 ---@param seq integer
 ---@param parent_ind integer
 ---@return boolean
@@ -138,7 +141,13 @@ local function draw(tree, graph, line2seq, other_info, seq, parent_ind)
 
     table.insert(graph, string.rep(" ", tree.indent * 2) .. "*")
     line2seq[#graph] = seq
-    other_info[seq] = { save = tree.save, time = tree.time, lnum = #graph, parent = tree.parent }
+    other_info[seq] = {
+      save = tree.save,
+      time = tree.time,
+      lnum = #graph,
+      parent = tree.parent,
+    }
+
     return true
   end
 
@@ -153,7 +162,7 @@ end
 ---@param tree UndoTreeNode
 ---@param graph string[]
 ---@param line2seq integer[]
----@param other_info OtherInfo
+---@param other_info OtherInfo[]
 ---@param last_seq integer
 local function gen_graph(tree, graph, line2seq, other_info, last_seq)
   local cur_seq = 1
@@ -175,7 +184,6 @@ local Undotree = {}
 
 function Undotree.new()
   local obj = setmetatable({}, { __index = Undotree })
-
   obj:reset()
 
   return obj
@@ -196,25 +204,28 @@ end
 function Undotree:gen_graph_tree()
   local undo_tree = vim.fn.undotree()
 
-  self.seq_cur_bak, self.seq_cur = self.seq_cur, undo_tree.seq_cur
+  self.seq_cur_bak = self.seq_cur
+  self.seq_cur = undo_tree.seq_cur
 
   if self.seq_last == undo_tree.seq_last then
     return false
   end
 
   self:reset()
-  self.seq_cur, self.seq_last = undo_tree.seq_cur, undo_tree.seq_last
+  self.seq_cur = undo_tree.seq_cur
+  self.seq_last = undo_tree.seq_last
 
   local normal_tree = Node.new(0, nil, nil)
-  local graph, line2seq, other_info = { "*" }, { 0 }, { [0] = { lnum = 1 } }
+  local graph = { "*" }
+  local line2seq = { 0 }
+  local other_info = { [0] = { lnum = 1 } }
 
   parse_entries(undo_tree.entries, normal_tree)
   gen_indentions(normal_tree, 0)
   gen_graph(normal_tree, graph, line2seq, other_info, undo_tree.seq_last)
 
-  local graph_len = #graph
-
-  self.seq2line[0], self.line2seq[graph_len] = graph_len, 0
+  self.seq2line[0] = #graph
+  self.line2seq[#graph] = 0
   self.seq2parent[0] = nil
   graph[1] = graph[1] .. string.rep(" ", 4) .. "(Original)"
 
