@@ -1,5 +1,7 @@
 local fmt = string.format
 
+---@alias OtherInfo { save: integer, time: integer, lnum: integer, parent: integer }[]
+
 local conf = require("undotree.config")
 
 ---@param ptime integer
@@ -30,15 +32,17 @@ end
 
 ---@class UndoTreeNode
 ---@field seq? integer
----@field time? integer
----@field save? integer
----@field alt? UndoTreeNode[]
----@field indent? any
+---@field time? integer|nil
+---@field save? integer|nil
+---@field indent? integer
 ---@field children? UndoTreeNode[]
----@field parent? any
+---@field parent? integer
 local Node = {}
 
----@return UndoTreeNode|vim.fn.undotree.ret node
+---@param seq integer
+---@param time integer|nil
+---@param save integer|nil
+---@return UndoTreeNode node
 function Node.new(seq, time, save)
   local node = setmetatable({
     seq = seq,
@@ -50,7 +54,7 @@ function Node.new(seq, time, save)
   return node
 end
 
----@param input vim.fn.undotree.ret
+---@param input vim.fn.undotree.entry[]|UndoTreeNode
 ---@param output UndoTreeNode
 local function parse_entries(input, output)
   if vim.tbl_isempty(input) then
@@ -70,6 +74,8 @@ local function parse_entries(input, output)
 end
 
 ---@param tree UndoTreeNode
+---@param indent integer
+---@return integer ind
 local function gen_indentions(tree, indent)
   tree.indent = indent
 
@@ -86,9 +92,10 @@ local function gen_indentions(tree, indent)
   return ind
 end
 
----@param graph table|string[]
----@param indent integer
+---@param graph string[]
+---@param index integer
 ---@param char string
+---@param indent integer
 local function set_line(graph, index, char, indent)
   local line = graph[index]
   local line_len = line:len()
@@ -101,6 +108,12 @@ local function set_line(graph, index, char, indent)
 end
 
 ---@param tree UndoTreeNode
+---@param graph string[]
+---@param line2seq integer[]
+---@param other_info OtherInfo
+---@param seq integer
+---@param parent_ind integer
+---@return boolean
 local function draw(tree, graph, line2seq, other_info, seq, parent_ind)
   if tree.seq == seq then
     local parent_lnum = other_info[tree.parent].lnum
@@ -138,9 +151,9 @@ local function draw(tree, graph, line2seq, other_info, seq, parent_ind)
 end
 
 ---@param tree UndoTreeNode
----@param graph table
----@param line2seq table
----@param other_info table
+---@param graph string[]
+---@param line2seq integer[]
+---@param other_info OtherInfo
 ---@param last_seq integer
 local function gen_graph(tree, graph, line2seq, other_info, last_seq)
   local cur_seq = 1
@@ -151,19 +164,19 @@ local function gen_graph(tree, graph, line2seq, other_info, last_seq)
 end
 
 ---@class UndoTree
+---@field char_graph? string[]
+---@field line2seq? integer[]
+---@field seq2line? integer[]
+---@field seq2parent? (integer|nil)[]
+---@field seq_last? integer
+---@field seq_cur? integer
+---@field seq_cur_bak? integer
 local Undotree = {}
 
 function Undotree.new()
-  ---@type UndoTree
-  local obj = setmetatable({
-    char_graph = {},
-    line2seq = {},
-    seq2line = {},
-    seq2parent = {},
-    seq_last = -1,
-    seq_cur = -1,
-    seq_cur_bak = -1,
-  }, { __index = Undotree })
+  local obj = setmetatable({}, { __index = Undotree })
+
+  obj:reset()
 
   return obj
 end
