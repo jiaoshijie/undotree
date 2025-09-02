@@ -1,11 +1,12 @@
 ---@module 'undotree.collector'
 
+---@param collector? UndoTreeCollector
 local function enter(collector)
   if not collector then
     return
   end
 
-  local cseq = collector.undotree_info.line2seq[vim.fn.line('.')]
+  local cseq = collector.undotree_info.line2seq[vim.fn.line(".")]
   collector:undo2(cseq)
   collector:reflash_diff()
 end
@@ -26,9 +27,9 @@ end
 ---@param collector UndoTreeCollector
 function action.move2parent(collector)
   local cu = collector.undotree_info
-  local parent_seq = cu.seq2parent[cu.line2seq[vim.fn.line('.')]]
+  local parent_seq = cu.seq2parent[cu.line2seq[vim.fn.line(".")]]
   local lnum = cu.seq2line[parent_seq]
-  collector:move_selection(lnum - vim.fn.line('.'))
+  collector:move_selection(lnum - vim.fn.line("."))
 end
 
 ---@param collector UndoTreeCollector
@@ -63,3 +64,5 @@ function action.quit(collector)
 end
 
 return action
+
+-- vim:ts=2:sts=2:sw=2:et:ai:si:sta:
