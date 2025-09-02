@@ -1,7 +1,13 @@
 ---@module 'undotree.collector'
 
+local validate = vim.validate
+
+---@class UndoTreeAction
+local action = {}
+
 ---@param collector? UndoTreeCollector
-local function enter(collector)
+function action.enter(collector)
+  validate("collector", collector, "table", true, "UndoTreeCollector")
   if not collector then
     return
   end
@@ -11,21 +17,21 @@ local function enter(collector)
   collector:reflash_diff()
 end
 
----@class UndoTreeAction
-local action = {}
-
 ---@param collector UndoTreeCollector
 function action.move_next(collector)
+  validate("collector", collector, "table", false, "UndoTreeCollector")
   collector:move_selection(1)
 end
 
 ---@param collector UndoTreeCollector
 function action.move_prev(collector)
+  validate("collector", collector, "table", false, "UndoTreeCollector")
   collector:move_selection(-1)
 end
 
 ---@param collector UndoTreeCollector
 function action.move2parent(collector)
+  validate("collector", collector, "table", false, "UndoTreeCollector")
   local cu = collector.undotree_info
   local parent_seq = cu.seq2parent[cu.line2seq[vim.fn.line(".")]]
   local lnum = cu.seq2line[parent_seq]
@@ -34,23 +40,27 @@ end
 
 ---@param collector UndoTreeCollector
 function action.move_change_next(collector)
+  validate("collector", collector, "table", false, "UndoTreeCollector")
   collector:move_selection(1, true)
-  enter(collector)
+  action.enter(collector)
 end
 
 ---@param collector UndoTreeCollector
 function action.move_change_prev(collector)
+  validate("collector", collector, "table", false, "UndoTreeCollector")
   collector:move_selection(-1, true)
-  enter(collector)
+  action.enter(collector)
 end
 
 ---@param collector UndoTreeCollector
 function action.action_enter(collector)
-  enter(collector)
+  validate("collector", collector, "table", false, "UndoTreeCollector")
+  action.enter(collector)
 end
 
 ---@param collector UndoTreeCollector
 function action.enter_diffbuf(collector)
+  validate("collector", collector, "table", false, "UndoTreeCollector")
   if not collector.diff_win then
     error("There is no diff window found!!!", vim.log.levels.ERROR)
   end
@@ -60,6 +70,7 @@ end
 
 ---@param collector UndoTreeCollector
 function action.quit(collector)
+  validate("collector", collector, "table", false, "UndoTreeCollector")
   collector:close()
 end
 

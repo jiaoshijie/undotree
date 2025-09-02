@@ -1,4 +1,6 @@
 local fmt = string.format
+local mf = math.floor
+local validate = vim.validate
 
 ---@class OtherInfo
 ---@field save integer
@@ -11,7 +13,8 @@ local conf = require("undotree.config")
 ---@param ptime integer
 ---@return string
 local function time_ago(ptime)
-  local mf, sec = math.floor, vim.fn.localtime() - ptime
+  validate("ptime", ptime, "number", false, "integer")
+  local sec = vim.fn.localtime() - ptime
 
   local mft
 
@@ -48,6 +51,10 @@ local Node = {}
 ---@param save integer|nil
 ---@return UndoTreeNode node
 function Node.new(seq, time, save)
+  validate("seq", seq, "number", false, "integer")
+  validate("time", time, { "nil", "number" }, false, "integer|nil")
+  validate("save", save, { "nil", "number" }, false, "integer|nil")
+
   local node = setmetatable({}, { __index = Node })
   node.seq = seq
   node.time = time
@@ -60,17 +67,19 @@ end
 ---@param input vim.fn.undotree.entry[]
 ---@param output UndoTreeNode
 local function parse_entries(input, output)
+  validate("input", input, "table", false, "vim.fn.undotree.entry[]")
+  validate("output", output, "table", false, "UndoTreeNode")
+
   if vim.tbl_isempty(input) then
     return
   end
 
   for _, n in ipairs(input) do
-    local new_node = Node.new(n.seq, n.time, n.save)
-
     if n.alt ~= nil then
       parse_entries(n.alt, output)
     end
 
+    local new_node = Node.new(n.seq, n.time, n.save)
     table.insert(output.children, new_node)
     output = new_node
   end
@@ -80,10 +89,11 @@ end
 ---@param indent integer
 ---@return integer ind
 local function gen_indentions(tree, indent)
+  validate("tree", tree, "table", false, "UndoTreeNode")
+  validate("indent", indent, "number", false, "integer")
+
   tree.indent = indent
-
   local ind = tree.indent
-
   for i, n in ipairs(tree.children) do
     if i ~= 1 then
       ind = ind + 1
@@ -100,13 +110,22 @@ end
 ---@param char string
 ---@param indent integer
 local function set_line(graph, index, char, indent)
+  validate("graph", graph, "table", false, "string[]")
+  validate("index", index, "number", false, "integer")
+  validate("char", char, "string", false)
+  validate("indent", indent, "number", false, "integer")
+
+  if vim.tbl_isempty(graph) then
+    error("undotree - set_line: empty graph!")
+  end
+
   local line = graph[index]
   local line_len = line:len()
 
   if line_len >= indent * 2 + 1 then
-    graph[index] = graph[index]:sub(1, indent * 2) .. char .. graph[index]:sub(indent * 2 + 2)
+    graph[index] = line:sub(1, indent * 2) .. char .. line:sub(indent * 2 + 2)
   else
-    graph[index] = graph[index] .. string.rep(" ", indent * 2 - line_len) .. char
+    graph[index] = line .. string.rep(" ", indent * 2 - line_len) .. char
   end
 end
 
@@ -118,17 +137,24 @@ end
 ---@param parent_ind integer
 ---@return boolean
 local function draw(tree, graph, line2seq, other_info, seq, parent_ind)
+  validate("tree", tree, "table", false, "UndoTreeNode")
+  validate("graph", graph, "table", false, "string[]")
+  validate("line2seq", line2seq, "table", false, "integer[]")
+  validate("other_info", other_info, "table", false, "OtherInfo[]")
+  validate("seq", seq, "number", false, "integer")
+  validate("parent_ind", parent_ind, "number", false, "integer")
+
   if tree.seq == seq then
     local parent_lnum = other_info[tree.parent].lnum
-    local parent_line_len = string.len(graph[parent_lnum])
+    local parent_line = graph[parent_lnum]
+    local parent_line_len = parent_line:len()
 
     if parent_line_len < tree.indent * 2 + 1 then
-      graph[parent_lnum] = graph[parent_lnum]
-        .. string.rep("-", tree.indent * 2 + 1 - string.len(graph[parent_lnum]))
+      graph[parent_lnum] = parent_line .. string.rep("-", tree.indent * 2 + 1 - parent_line_len)
     elseif parent_line_len > tree.indent * 2 + 1 then
-      graph[parent_lnum] = graph[parent_lnum]:sub(1, parent_ind * 2 + 1)
+      graph[parent_lnum] = parent_line:sub(1, parent_ind * 2 + 1)
         .. string.rep("-", (tree.indent - parent_ind) * 2)
-        .. graph[parent_lnum]:sub(tree.indent * 2 + 2)
+        .. parent_line:sub(tree.indent * 2 + 2)
     end
 
     if parent_lnum == #graph then
@@ -165,6 +191,12 @@ end
 ---@param other_info OtherInfo[]
 ---@param last_seq integer
 local function gen_graph(tree, graph, line2seq, other_info, last_seq)
+  validate("tree", tree, "table", false, "UndoTreeNode")
+  validate("graph", graph, "table", false, "string[]")
+  validate("line2seq", line2seq, "table", false, "integer[]")
+  validate("other_info", other_info, "table", false, "OtherInfo[]")
+  validate("last_seq", last_seq, "number", false, "integer")
+
   local cur_seq = 1
   while cur_seq <= last_seq do
     draw(tree, graph, line2seq, other_info, cur_seq, 0)
@@ -189,6 +221,7 @@ function Undotree.new()
   return obj
 end
 
+---@param self UndoTree
 function Undotree:reset()
   self.char_graph = {}
   self.line2seq = {}
@@ -200,6 +233,7 @@ function Undotree:reset()
   self.seq_cur_bak = -1
 end
 
+---@param self UndoTree
 ---@return boolean
 function Undotree:gen_graph_tree()
   local undo_tree = vim.fn.undotree()
