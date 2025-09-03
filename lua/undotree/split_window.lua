@@ -1,10 +1,14 @@
 local floor = math.floor
+local validate = vim.validate
 
 local _unique_winbuf = 0
 
 ---@param winid integer
 ---@param bufnr integer
 local function set_option(winid, bufnr)
+  validate("winid", winid, "number", false, "integer")
+  validate("bufnr", bufnr, "number", false, "integer")
+
   local opts_buf_set, opts_win_set = { buf = bufnr }, { win = winid }
 
   -- window options --
@@ -46,6 +50,9 @@ local split_window = {}
 ---@return integer winid
 ---@return integer prev_winid
 function split_window:create(what, opts)
+  validate("what", what, { "string", "number" }, false, "string|integer")
+  validate("opts", opts, "table", true, "UndoWinTree.Opts")
+
   opts = opts or {}
 
   local size, c_win_command = 0, { "silent keepalt" }

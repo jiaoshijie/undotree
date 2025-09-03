@@ -4,8 +4,9 @@ local M = {}
 ---@param T table
 ---@return table T
 function M.reverse_table(T)
-  local len = #T
+  vim.validate("T", T, "table", false)
 
+  local len = #T
   for i = 1, math.floor(len / 2), 1 do
     T[i], T[len - i + 1] = T[len - i + 1], T[i]
   end

@@ -1,8 +1,12 @@
 local fmt = string.format
+local validate = vim.validate
 
 ---@param cseq integer
 ---@param seq_last integer
 local function undo2(cseq, seq_last)
+  validate("cseq", cseq, "number", false, "integer")
+  validate("seq_last", seq_last, "number", false, "integer")
+
   local cmd =
     fmt('silent exe "%s"', (cseq == 0 and ("norm!" .. seq_last .. "u") or ("undo" .. cseq)))
   vim.cmd(cmd)
@@ -15,25 +19,28 @@ end
 ---@field diff_highlight table
 local Diff = {}
 
+---@param self UndoTreeDiff
 ---@return UndoTreeDiff obj
 function Diff:new()
-  local obj = setmetatable({
-    old_seq = nil,
-    new_seq = nil,
-    diff_info = {},
-    diff_highlight = {},
-  }, { __index = Diff })
+  local obj = setmetatable({}, { __index = Diff })
+
+  obj:set(nil, nil)
 
   return obj
 end
 
----@param old integer
----@param new integer
+---@param self UndoTreeDiff
+---@param old integer | nil
+---@param new integer | nil
 function Diff:set(old, new)
-  self.old_seq, self.new_seq = old, new
-  self.diff_info, self.diff_highlight = {}, {}
+  self.old_seq = old
+  self.new_seq = new
+
+  self.diff_info = {}
+  self.diff_highlight = {}
 end
 
+---@param self UndoTreeDiff
 ---@param src_buf integer
 ---@param src_win integer
 ---@param undo_win integer
@@ -41,6 +48,13 @@ end
 ---@param new_seq integer
 ---@param seq_last integer
 function Diff:update_diff(src_buf, src_win, undo_win, old_seq, new_seq, seq_last)
+  validate("src_buf", src_buf, "number", false, "integer")
+  validate("src_win", src_win, "number", false, "integer")
+  validate("undo_win", undo_win, "number", false, "integer")
+  validate("old_seq", old_seq, "number", false, "integer")
+  validate("new_seq", new_seq, "number", false, "integer")
+  validate("seq_last", seq_last, "number", false, "integer")
+
   if old_seq == self.old_seq and new_seq == self.new_seq then
     return
   end

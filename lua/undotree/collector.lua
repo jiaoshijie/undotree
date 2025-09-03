@@ -194,6 +194,8 @@ function Collector:run()
   })
 end
 
+---@param self UndoTreeCollector
+---@param bufnr? integer|string
 function Collector:create_popup_win(bufnr, popup_opts)
   local what = bufnr or ""
   local win, opts = popup.create(what, popup_opts)
@@ -206,6 +208,7 @@ function Collector:create_popup_win(bufnr, popup_opts)
   return win, opts, border_win
 end
 
+---@param self UndoTreeCollector
 ---@param max_columns integer
 ---@param max_lines integer
 ---@return UndoWinTree
@@ -245,7 +248,8 @@ function Collector:get_window_option(max_columns, max_lines)
     opts.diff_opts.line = math.floor((max_lines - height) / 2)
     opts.diff_opts.height = height
     opts.diff_opts.minheight = height
-    opts.diff_opts.borderchars = self.window.borderchars or { "─", "│", "─", "│", "╭", "╮", "╯", "╰" }
+    opts.diff_opts.borderchars = self.window.borderchars
+      or { "─", "│", "─", "│", "╭", "╮", "╯", "╰" }
     opts.diff_opts.title = "Diff Previewer"
 
     if self.position == "right" then
@@ -270,6 +274,7 @@ function Collector:get_window_option(max_columns, max_lines)
   return opts
 end
 
+---@param self UndoTreeCollector
 ---@param always_flash boolean
 function Collector:reflash_undotree(always_flash)
   vim.cmd("noautocmd lua vim.api.nvim_set_current_win(" .. self.src_winid .. ")")
@@ -285,6 +290,9 @@ function Collector:reflash_undotree(always_flash)
   vim.api.nvim_set_option_value("modifiable", false, { buf = self.undotree_bufnr })
 end
 
+---@param self UndoTreeCollector
+---@param change integer
+---@param not_reflash? boolean
 function Collector:move_selection(change, not_reflash)
   local lnum = vim.fn.line(".") + change
   local col, found = 0, false
@@ -299,6 +307,9 @@ function Collector:move_selection(change, not_reflash)
   end
 end
 
+---@param self UndoTreeCollector
+---@param pos [integer, integer]
+---@param not_reflash? boolean
 function Collector:set_selection(pos, not_reflash)
   vim.api.nvim_win_set_cursor(self.undotree_win, pos)
   if not not_reflash then
@@ -306,6 +317,7 @@ function Collector:set_selection(pos, not_reflash)
   end
 end
 
+---@param self UndoTreeCollector
 function Collector:reflash_diff()
   local cursor_seq = self.undotree_info.line2seq[vim.fn.line(".")]
 
@@ -340,11 +352,13 @@ function Collector:reflash_diff()
   vim.api.nvim_buf_set_lines(self.diff_bufnr, 0, -1, false, self.diff_previewer.diff_info)
   for i, hl in ipairs(self.diff_previewer.diff_highlight) do
     -- vim.api.nvim_buf_add_highlight(self.diff_bufnr, -1, hl, i - 1, 0, -1)
-    vim.hl.range(self.diff_bufnr, -1, hl, {i - 1, 0}, {i - 1, -1}, { timeout = -1 })
+    vim.hl.range(self.diff_bufnr, -1, hl, { i - 1, 0 }, { i - 1, -1 }, { timeout = -1 })
   end
   vim.api.nvim_set_option_value("modifiable", false, { buf = self.diff_bufnr })
 end
 
+---@param self UndoTreeCollector
+---@param cseq integer
 function Collector:set_marks(cseq)
   -- >num< : The current state
   local seq_lnum = self.undotree_info.seq2line[cseq]
@@ -363,10 +377,13 @@ function Collector:set_marks(cseq)
   vim.api.nvim_set_option_value("modifiable", false, { buf = self.undotree_bufnr })
 end
 
+---@param self UndoTreeCollector
+---@param cseq? integer
 function Collector:undo2(cseq)
   if cseq == nil then
     return
   end
+
   vim.cmd("noautocmd lua vim.api.nvim_set_current_win(" .. self.src_winid .. ")")
   local cmd
   if cseq == 0 then
@@ -380,6 +397,7 @@ function Collector:undo2(cseq)
   self:set_marks(cseq)
 end
 
+---@param self UndoTreeCollector
 function Collector:close()
   win_delete(self.undotree_win, true, true)
   win_delete(self.diff_win, true, true)

@@ -3,6 +3,8 @@ local Undotree = {}
 
 ---@param opt? UndoTreeCollector.Opts
 function Undotree.setup(opt)
+  vim.validate("opt", opt, "table", true, "UndoTreeCollector.Opts")
+
   local Coll = require("undotree.collector")
   Undotree.coll = Coll.new(opt or {})
 end
