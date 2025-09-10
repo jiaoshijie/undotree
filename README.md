@@ -123,7 +123,36 @@ vim.keymap.set('n', '<leader>u', require('undotree').toggle, { noremap = true, s
 vim.keymap.set('n', '<leader>uo', require('undotree').open, { noremap = true, silent = true })
 vim.keymap.set('n', '<leader>uc', require('undotree').close, { noremap = true, silent = true })
 ```
+### User commands:
+This creates an `Undotree <subcommand>` command with three options: `toggle`, `open` and `close`
+```lua
+vim.api.nvim_create_user_command('Undotree', function(opts)
+  local args = opts.fargs
+  local cmd = args[1]
 
+  if cmd == "toggle" then
+    require("undotree").toggle()
+  elseif cmd == "open" then
+    require("undotree").open()
+  elseif cmd == "close" then
+    require("undotree").close()
+  else
+    vim.notify("Invalid subcommand: " .. (cmd or ""), vim.log.levels.ERROR)
+  end
+end, {
+  nargs = 1,
+  complete = function(_, line)
+    local subcommands = { "toggle", "open", "close" }
+    local input = vim.split(line, "%s+")
+    local prefix = input[#input]
+
+    return vim.tbl_filter(function(cmd)
+      return vim.startswith(cmd, prefix)
+    end, subcommands)
+  end,
+  desc = "Undotree command with subcommands: toggle, open, close",
+})
+```
 2. Some Mappings
 
 | Mappings | Action                                               |
