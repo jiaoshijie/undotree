@@ -348,11 +348,18 @@ function Collector:reflash_diff()
     seq_last
   )
 
+  local ns_dict = vim.api.nvim_get_namespaces()
+  local ns
+  if not vim.tbl_contains(ns_dict, 'undotree') then
+    ns = vim.api.nvim_create_namespace('undotree')
+  else
+    ns = ns_dict['undotree']
+  end
   vim.api.nvim_set_option_value("modifiable", true, { buf = self.diff_bufnr })
   vim.api.nvim_buf_set_lines(self.diff_bufnr, 0, -1, false, self.diff_previewer.diff_info)
   for i, hl in ipairs(self.diff_previewer.diff_highlight) do
     -- vim.api.nvim_buf_add_highlight(self.diff_bufnr, -1, hl, i - 1, 0, -1)
-    vim.hl.range(self.diff_bufnr, -1, hl, { i - 1, 0 }, { i - 1, -1 }, { timeout = -1 })
+    vim.hl.range(self.diff_bufnr, ns, hl, { i - 1, 0 }, { i - 1, -1 }, { timeout = -1 })
   end
   vim.api.nvim_set_option_value("modifiable", false, { buf = self.diff_bufnr })
 end
