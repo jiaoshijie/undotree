@@ -60,26 +60,6 @@ Using [lazy.nvim](https://github.com/folke/lazy.nvim)
 
 ### Usage
 
-Basic setup
-
-```lua
-require('undotree').setup()
-```
-
-If using [packer.nvim](https://github.com/wbthomason/packer.nvim) undotree can be setup directly in the plugin spec:
-
-```lua
-use {
-  "jiaoshijie/undotree",
-  config = function()
-    require('undotree').setup()
-  end,
-  requires = {
-    "nvim-lua/plenary.nvim",
-  },
-}
-```
-
 Configuration can be passed to the setup function. Here is an example with the default settings:
 
 ```lua
