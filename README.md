@@ -62,6 +62,10 @@ Using [lazy.nvim](https://github.com/folke/lazy.nvim)
 
 Configuration can be passed to the setup function. Here is an example with the default settings:
 
+> [!NOTE]
+> If you’re fine with the default settings, you don’t need to call the setup
+> function — only the keymaps or user commands need to be configured.
+
 ```lua
 local undotree = require('undotree')
 
