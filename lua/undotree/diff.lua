@@ -1,14 +1,19 @@
-local fmt = string.format
-local validate = vim.validate
-
 ---@param cseq integer
 ---@param seq_last integer
 local function undo2(cseq, seq_last)
-  validate("cseq", cseq, "number", false, "integer")
-  validate("seq_last", seq_last, "number", false, "integer")
+  if vim.fn.has("nvim-0.11") == 1 then
+    vim.validate("cseq", cseq, "number", false, "integer")
+    vim.validate("seq_last", seq_last, "number", false, "integer")
+  else
+    vim.validate({
+      cseq = { cseq, "number" },
+      seq_last = { seq_last, "number" },
+    })
+  end
 
-  local cmd =
-    fmt('silent exe "%s"', (cseq == 0 and ("norm!" .. seq_last .. "u") or ("undo" .. cseq)))
+  local cmd = ('silent exe "%s"'):format(
+    (cseq == 0 and ("norm!" .. seq_last .. "u") or ("undo" .. cseq))
+  )
   vim.cmd(cmd)
 end
 
@@ -48,19 +53,30 @@ end
 ---@param new_seq integer
 ---@param seq_last integer
 function Diff:update_diff(src_buf, src_win, undo_win, old_seq, new_seq, seq_last)
-  validate("src_buf", src_buf, "number", false, "integer")
-  validate("src_win", src_win, "number", false, "integer")
-  validate("undo_win", undo_win, "number", false, "integer")
-  validate("old_seq", old_seq, "number", false, "integer")
-  validate("new_seq", new_seq, "number", false, "integer")
-  validate("seq_last", seq_last, "number", false, "integer")
+  if vim.fn.has("nvim-0.11") == 1 then
+    vim.validate("src_buf", src_buf, "number", false, "integer")
+    vim.validate("src_win", src_win, "number", false, "integer")
+    vim.validate("undo_win", undo_win, "number", false, "integer")
+    vim.validate("old_seq", old_seq, "number", false, "integer")
+    vim.validate("new_seq", new_seq, "number", false, "integer")
+    vim.validate("seq_last", seq_last, "number", false, "integer")
+  else
+    vim.validate({
+      src_buf = { src_buf, "number" },
+      src_win = { src_win, "number" },
+      undo_win = { undo_win, "number" },
+      old_seq = { old_seq, "number" },
+      new_seq = { new_seq, "number" },
+      seq_last = { seq_last, "number" },
+    })
+  end
 
   if old_seq == self.old_seq and new_seq == self.new_seq then
     return
   end
 
   self:set(old_seq, new_seq)
-  table.insert(self.diff_info, fmt("%s --> %s", old_seq, new_seq))
+  table.insert(self.diff_info, ("%s --> %s"):format(old_seq, new_seq))
   table.insert(self.diff_highlight, "UndotreeDiffLine")
 
   if old_seq == new_seq then
@@ -86,7 +102,7 @@ function Diff:update_diff(src_buf, src_win, undo_win, old_seq, new_seq, seq_last
   local on_hunk_callback = function(start_old, count_old, start_new, count_new)
     table.insert(
       self.diff_info,
-      fmt("@@ -%s,%s ,%s @@", start_old, count_old, start_new, count_new)
+      ("@@ -%s,%s ,%s @@"):format(start_old, count_old, start_new, count_new)
     )
     table.insert(self.diff_highlight, "UndotreeDiffLine")
     if count_old ~= 0 then
