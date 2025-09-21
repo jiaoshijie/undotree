@@ -10,6 +10,10 @@ function M.reverse_table(T)
     vim.validate({ T = { T, "table" } })
   end
 
+  if vim.tbl_isempty(T) then
+    return T
+  end
+
   local len = #T
   for i = 1, math.floor(len / 2), 1 do
     T[i], T[len - i + 1] = T[len - i + 1], T[i]
