@@ -3,10 +3,15 @@ local Undotree = {}
 
 ---@param opt? UndoTreeCollector.Opts
 function Undotree.setup(opt)
-  vim.validate("opt", opt, "table", true, "UndoTreeCollector.Opts")
+  if vim.fn.has("nvim-0.11") == 1 then
+    vim.validate("opt", opt, "table", true, "UndoTreeCollector.Opts")
+  else
+    vim.validate({ opt = { opt, { "table", "nil" } } })
+  end
+  opt = opt or {}
 
   local Coll = require("undotree.collector")
-  Undotree.coll = Coll.new(opt or {})
+  Undotree.coll = Coll.new(opt)
 end
 
 function Undotree.open()

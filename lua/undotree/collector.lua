@@ -350,10 +350,10 @@ function Collector:reflash_diff()
 
   local ns_dict = vim.api.nvim_get_namespaces()
   local ns
-  if not vim.tbl_contains(ns_dict, 'undotree') then
-    ns = vim.api.nvim_create_namespace('undotree')
+  if not vim.tbl_contains(ns_dict, "undotree") then
+    ns = vim.api.nvim_create_namespace("undotree")
   else
-    ns = ns_dict['undotree']
+    ns = ns_dict["undotree"]
   end
   vim.api.nvim_set_option_value("modifiable", true, { buf = self.diff_bufnr })
   vim.api.nvim_buf_set_lines(self.diff_bufnr, 0, -1, false, self.diff_previewer.diff_info)
