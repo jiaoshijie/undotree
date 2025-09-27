@@ -3,8 +3,6 @@ local Diff = require("undotree.diff")
 local split_win = require("undotree.split_window")
 local action = require("undotree.action")
 
-local popup = require("plenary.popup")
-
 ---@class UndoTreeCollector.Opts
 local default_opt = {
   ---@type boolean
@@ -15,9 +13,6 @@ local default_opt = {
     "undotree",
     "undotreeDiff",
     "qf",
-    "TelescopePrompt",
-    "spectre_panel",
-    "tsplayground",
   },
 
   ---@type UndoTree
@@ -33,12 +28,13 @@ local default_opt = {
   diff_previewer = Diff:new(),
 
   ---@class UndoTreeCollector.WinOpts
-  ---@field borderchars? string[]
+  ---@field border? string
   window = {
     winblend = 30,
     -- TODO: maybe change it to a suitable number
     height = 0,
     width = 0,
+    border = "rounded",
   },
 
   ---@type table<string, string>
@@ -188,24 +184,23 @@ function Collector:run()
     group = group,
     callback = function()
       win_delete(self.diff_win, true, true)
-      win_delete(self.diff_border, true, true)
       self.src_bufnr = nil
     end,
   })
 end
 
 ---@param self UndoTreeCollector
----@param bufnr? integer|string
+---@param bufnr integer
 function Collector:create_popup_win(bufnr, popup_opts)
-  local what = bufnr or ""
-  local win, opts = popup.create(what, popup_opts)
+  local win = vim.api.nvim_open_win(bufnr, false, popup_opts)
+
   vim.api.nvim_set_option_value("winblend", self.window.winblend, { win = win })
   vim.api.nvim_set_option_value("wrap", false, { win = win })
-  local border_win = opts and opts.border and opts.border.win_id
-  if border_win then
-    vim.api.nvim_set_option_value("winblend", self.window.winblend, { win = border_win })
+  if vim.fn.exists("+winbar") ~= 0 then
+    vim.api.nvim_set_option_value("winbar", nil, { win = win })
   end
-  return win, opts, border_win
+
+  return win
 end
 
 ---@param self UndoTreeCollector
@@ -243,14 +238,14 @@ function Collector:get_window_option(max_columns, max_lines)
   if self.float_diff then
     local height = math.floor(max_lines * 0.8)
 
-    opts.diff_opts.border = true
-    opts.diff_opts.enter = false
-    opts.diff_opts.line = math.floor((max_lines - height) / 2)
+    opts.diff_opts.relative = "editor"
+    opts.diff_opts.row = math.floor((max_lines - height) / 2)
     opts.diff_opts.height = height
-    opts.diff_opts.minheight = height
-    opts.diff_opts.borderchars = self.window.borderchars
-      or { "─", "│", "─", "│", "╭", "╮", "╯", "╰" }
+    opts.diff_opts.style = "minimal"
+    opts.diff_opts.border = self.window.border or "rounded"
     opts.diff_opts.title = "Diff Previewer"
+    opts.diff_opts.title_pos = "center"
+    opts.diff_opts.noautocmd = true
 
     if self.position == "right" then
       opts.diff_opts.col = opts.undotree_opts.size - 15
@@ -328,13 +323,14 @@ function Collector:reflash_diff()
   local cseq = self.undotree_info.seq_cur
   if self.float_diff and cursor_seq == cseq then
     win_delete(self.diff_win, true, true)
-    win_delete(self.diff_border, true, true)
     self.diff_bufnr = nil
     self.diff_win = nil
     return
   elseif self.float_diff and not self.diff_bufnr then
-    self.diff_win, _, self.diff_border = self:create_popup_win("", self.diff_win_opts)
-    self.diff_bufnr = vim.api.nvim_win_get_buf(self.diff_win)
+    self.diff_bufnr = vim.api.nvim_create_buf(false, true)
+    assert(self.diff_bufnr ~= 0, "create diff buf failed")
+    self.diff_win = self:create_popup_win(self.diff_bufnr, self.diff_win_opts)
+    assert(self.diff_win ~= 0, "create diff floating window failed")
     vim.api.nvim_set_option_value("filetype", "undotreeDiff", { buf = self.diff_bufnr })
   end
   local seq_last = self.undotree_info.seq_last
@@ -408,7 +404,6 @@ end
 function Collector:close()
   win_delete(self.undotree_win, true, true)
   win_delete(self.diff_win, true, true)
-  win_delete(self.diff_border, true, true)
   self.src_bufnr = nil
   vim.cmd("noautocmd lua vim.api.nvim_set_current_win(" .. self.src_winid .. ")")
 end

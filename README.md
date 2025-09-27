@@ -19,26 +19,13 @@ Using Vim's built-in package manager:
 ```sh
 mkdir -p ~/.config/nvim/pack/github/start/
 cd ~/.config/nvim/pack/github/start/
-git clone https://github.com/nvim-lua/plenary.nvim.git
 git clone https://github.com/jiaoshijie/undotree.git
 ```
 
 Using [vim-plug](https://github.com/junegunn/vim-plug)
 
 ```vim
-Plug 'nvim-lua/plenary.nvim'
 Plug 'jiaoshijie/undotree'
-```
-
-Using [packer.nvim](https://github.com/wbthomason/packer.nvim)
-
-```lua
-use {
-  "jiaoshijie/undotree",
-  requires = {
-    "nvim-lua/plenary.nvim",
-  },
-}
 ```
 
 Using [lazy.nvim](https://github.com/folke/lazy.nvim)
@@ -46,7 +33,6 @@ Using [lazy.nvim](https://github.com/folke/lazy.nvim)
 ```lua
 {
   "jiaoshijie/undotree",
-  dependencies = { "nvim-lua/plenary.nvim" },
   ---@module 'undotree.collector'
   ---@type UndoTreeCollector.Opts
   opts = {
@@ -77,12 +63,10 @@ undotree.setup({
     'undotree',
     'undotreeDiff',
     'qf',
-    'TelescopePrompt',
-    'spectre_panel',
-    'tsplayground',
   },
   window = {
     winblend = 30,
+    border = "rounded", -- The string values are the same as those described in 'winborder'.
   },
   keymaps = {
     j = "move_next",
@@ -97,6 +81,8 @@ undotree.setup({
 })
 ```
 
+### Keymaps
+
 You can directly use `:lua require('undotree').toggle()` for toggling undotree panel,
 or set the following keymaps for convenient using:
 
@@ -108,6 +94,7 @@ vim.keymap.set('n', '<leader>uo', require('undotree').open, { noremap = true, si
 vim.keymap.set('n', '<leader>uc', require('undotree').close, { noremap = true, silent = true })
 ```
 ### User commands:
+
 This creates an `Undotree <subcommand>` command with three options: `toggle`, `open` and `close`
 ```lua
 vim.api.nvim_create_user_command('Undotree', function(opts)
@@ -137,6 +124,7 @@ end, {
   desc = "Undotree command with subcommands: toggle, open, close",
 })
 ```
+
 2. Some Mappings
 
 | Mappings | Action                                               |
