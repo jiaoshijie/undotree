@@ -4,12 +4,6 @@ local M = {}
 ---@param T table
 ---@return table T
 function M.reverse_table(T)
-  if vim.fn.has("nvim-0.11") == 1 then
-    vim.validate("T", T, "table", false)
-  else
-    vim.validate({ T = { T, "table" } })
-  end
-
   if vim.tbl_isempty(T) then
     return T
   end

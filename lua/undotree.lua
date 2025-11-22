@@ -3,11 +3,6 @@ local Undotree = {}
 
 ---@param opt? UndoTreeCollector.Opts
 function Undotree.setup(opt)
-  if vim.fn.has("nvim-0.11") == 1 then
-    vim.validate("opt", opt, "table", true, "UndoTreeCollector.Opts")
-  else
-    vim.validate({ opt = { opt, { "table", "nil" } } })
-  end
   opt = opt or {}
 
   local Coll = require("undotree.collector")

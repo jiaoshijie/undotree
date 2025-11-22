@@ -11,12 +11,6 @@ local conf = require("undotree.config")
 ---@param ptime integer
 ---@return string
 local function time_ago(ptime)
-  if vim.fn.has("nvim-0.11") == 1 then
-    vim.validate("ptime", ptime, "number", false, "integer")
-  else
-    vim.validate({ ptime = { ptime, "number" } })
-  end
-
   local sec = vim.fn.localtime() - ptime
   local mft
 
@@ -53,18 +47,6 @@ local Node = {}
 ---@param save integer|nil
 ---@return UndoTreeNode node
 function Node.new(seq, time, save)
-  if vim.fn.has("nvim-0.11") then
-    vim.validate("seq", seq, "number", false, "integer")
-    vim.validate("time", time, { "nil", "number" }, false, "integer|nil")
-    vim.validate("save", save, { "nil", "number" }, false, "integer|nil")
-  else
-    vim.validate({
-      seq = { seq, "number" },
-      time = { time, { "nil", "number" } },
-      save = { save, { "nil", "number" } },
-    })
-  end
-
   local node = setmetatable({}, { __index = Node })
   node.seq = seq
   node.time = time
@@ -77,16 +59,6 @@ end
 ---@param input vim.fn.undotree.entry[]
 ---@param output UndoTreeNode
 local function parse_entries(input, output)
-  if vim.fn.has("nvim-0.11") then
-    vim.validate("input", input, "table", false, "vim.fn.undotree.entry[]")
-    vim.validate("output", output, "table", false, "UndoTreeNode")
-  else
-    vim.validate({
-      input = { input, "table" },
-      output = { output, "table" },
-    })
-  end
-
   if vim.tbl_isempty(input) then
     return
   end
@@ -106,16 +78,6 @@ end
 ---@param indent integer
 ---@return integer ind
 local function gen_indentions(tree, indent)
-  if vim.fn.has("nvim-0.11") then
-    vim.validate("tree", tree, "table", false, "UndoTreeNode")
-    vim.validate("indent", indent, "number", false, "integer")
-  else
-    vim.validate({
-      tree = { tree, "table" },
-      indent = { indent, "number" },
-    })
-  end
-
   tree.indent = indent
   local ind = tree.indent
   for i, n in ipairs(tree.children) do
@@ -134,20 +96,6 @@ end
 ---@param char string
 ---@param indent integer
 local function set_line(graph, index, char, indent)
-  if vim.fn.has("nvim-0.11") then
-    vim.validate("graph", graph, "table", false, "string[]")
-    vim.validate("index", index, "number", false, "integer")
-    vim.validate("char", char, "string", false)
-    vim.validate("indent", indent, "number", false, "integer")
-  else
-    vim.validate({
-      graph = { graph, "table" },
-      index = { index, "number" },
-      char = { char, "string" },
-      indent = { indent, "number" },
-    })
-  end
-
   if vim.tbl_isempty(graph) then
     error("undotree - set_line: empty graph!")
   end
@@ -170,24 +118,6 @@ end
 ---@param parent_ind integer
 ---@return boolean
 local function draw(tree, graph, line2seq, other_info, seq, parent_ind)
-  if vim.fn.has("nvim-0.11") then
-    vim.validate("tree", tree, "table", false, "UndoTreeNode")
-    vim.validate("graph", graph, "table", false, "string[]")
-    vim.validate("line2seq", line2seq, "table", false, "integer[]")
-    vim.validate("other_info", other_info, "table", false, "OtherInfo[]")
-    vim.validate("seq", seq, "number", false, "integer")
-    vim.validate("parent_ind", parent_ind, "number", false, "integer")
-  else
-    vim.validate({
-      tree = { tree, "table" },
-      graph = { graph, "table" },
-      line2seq = { line2seq, "table" },
-      other_info = { other_info, "table" },
-      seq = { seq, "number" },
-      parent_ind = { parent_ind, "number" },
-    })
-  end
-
   if tree.seq == seq then
     local parent_lnum = other_info[tree.parent].lnum
     local parent_line = graph[parent_lnum]
@@ -235,22 +165,6 @@ end
 ---@param other_info OtherInfo[]
 ---@param last_seq integer
 local function gen_graph(tree, graph, line2seq, other_info, last_seq)
-  if vim.fn.has("nvim-0.11") == 1 then
-    vim.validate("tree", tree, "table", false, "UndoTreeNode")
-    vim.validate("graph", graph, "table", false, "string[]")
-    vim.validate("line2seq", line2seq, "table", false, "integer[]")
-    vim.validate("other_info", other_info, "table", false, "OtherInfo[]")
-    vim.validate("last_seq", last_seq, "number", false, "integer")
-  else
-    vim.validate({
-      tree = { tree, "table" },
-      graph = { graph, "table" },
-      line2seq = { line2seq, "table" },
-      other_info = { other_info, "table" },
-      last_seq = { last_seq, "number" },
-    })
-  end
-
   local cur_seq = 1
   while cur_seq <= last_seq do
     draw(tree, graph, line2seq, other_info, cur_seq, 0)

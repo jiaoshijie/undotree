@@ -1,16 +1,6 @@
 ---@param cseq integer
 ---@param seq_last integer
 local function undo2(cseq, seq_last)
-  if vim.fn.has("nvim-0.11") == 1 then
-    vim.validate("cseq", cseq, "number", false, "integer")
-    vim.validate("seq_last", seq_last, "number", false, "integer")
-  else
-    vim.validate({
-      cseq = { cseq, "number" },
-      seq_last = { seq_last, "number" },
-    })
-  end
-
   local cmd = ('silent exe "%s"'):format(
     (cseq == 0 and ("norm!" .. seq_last .. "u") or ("undo" .. cseq))
   )
@@ -53,24 +43,6 @@ end
 ---@param new_seq integer
 ---@param seq_last integer
 function Diff:update_diff(src_buf, src_win, undo_win, old_seq, new_seq, seq_last)
-  if vim.fn.has("nvim-0.11") == 1 then
-    vim.validate("src_buf", src_buf, "number", false, "integer")
-    vim.validate("src_win", src_win, "number", false, "integer")
-    vim.validate("undo_win", undo_win, "number", false, "integer")
-    vim.validate("old_seq", old_seq, "number", false, "integer")
-    vim.validate("new_seq", new_seq, "number", false, "integer")
-    vim.validate("seq_last", seq_last, "number", false, "integer")
-  else
-    vim.validate({
-      src_buf = { src_buf, "number" },
-      src_win = { src_win, "number" },
-      undo_win = { undo_win, "number" },
-      old_seq = { old_seq, "number" },
-      new_seq = { new_seq, "number" },
-      seq_last = { seq_last, "number" },
-    })
-  end
-
   if old_seq == self.old_seq and new_seq == self.new_seq then
     return
   end
