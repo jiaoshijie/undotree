@@ -8,6 +8,23 @@ A neovim undotree plugin written in lua.
 
 Diff previewer window shows the difference between the current node and the node under the cursor.
 
+## TODO
+
+- [ ] refactor this plugin, remove the metatable usage, using data oriented style instead
+- [ ] support jump between undotree main and preview windows
+- [ ] redesign command
+  + `close`
+    * just close the undotree
+  + `open`
+    * if not opened and the buffer type is supported(also check the modifiable flag), open the undotree
+    * if already opened, and execute the command at the same bufnr, report a warning, do nothing
+    * if already opened, and the bufnr is different from the previous one, reopen the undotree for the current bufnr
+  + `toggle`
+    * if not opened and the buffer type is supported, open the undotree, otherwise, report an warning
+    * if opened and the undotree window is in the current tab page, close it
+    * if opened and the undotreee window is not in the current tab page and the buf type is supported, close the previous one then open it for the new bufnr
+    * if opened and the undotreee window is not in the current tab page and the buf type is not supported, close the previous one, report an warning
+
 ### Requirements
 
 - nvim 0.11.0 or above
