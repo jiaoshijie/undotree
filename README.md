@@ -16,7 +16,7 @@ Diff previewer window shows the difference between the current node and the node
   + `close`
     * just close the undotree
   + `open`
-    * if not opened and the buffer type is supported(also check the modifiable flag), open the undotree
+    * if not opened and the buffer type is supported(also check the modifiable/readonly flag), open the undotree
     * if already opened, and execute the command at the same bufnr, report a warning, do nothing
     * if already opened, and the bufnr is different from the previous one, reopen the undotree for the current bufnr
   + `toggle`
