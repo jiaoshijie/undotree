@@ -1,7 +1,11 @@
 local _M = {}
 
 _M.common = {
-    ignore_filetype = { "Undotree", "UndotreeDiff", "qf" }
+    -- NOTE: some special buffer's filetypes don't need to put here. 
+    -- Because these buffer's buftype is likely not empty, e.g. quickfix, help.
+    ignore_filetype = {},
+    --- @type "compact" | "legacy"
+    parser = "compact",
 }
 
 _M.ui_cfg = {
@@ -20,19 +24,23 @@ _M.ui_cfg = {
 _M.keymaps_cfg = {
     ['j'] = "move_next",
     ['k'] = "move_prev",
+    ['gj'] = "move2parent",
     ['J'] = "move_change_next",
     ['K'] = "move_change_prev",
     ['<cr>'] = "action_enter",
     ['p'] = "enter_diffbuf",    -- this can switch between preview and undotree window
     ['q'] = "quit",
+    ['S'] = "update_undotree_view",
 }
 
 -- NOTE: for backward compatibility
 _M.setup = function(cfg)
     _M.common = vim.tbl_extend("force", _M.common, {
-        ignore_filetype = cfg.ignore_filetype
+        ignore_filetype = cfg.ignore_filetype,
+        parser = cfg.parser,
     })
     cfg.ignore_filetype = nil
+    cfg.parser = nil
 
     _M.keymaps_cfg = vim.tbl_extend("force", _M.keymaps_cfg, cfg.keymaps)
     cfg.keymaps = nil

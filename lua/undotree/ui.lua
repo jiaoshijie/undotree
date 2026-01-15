@@ -59,4 +59,41 @@ local gen_win_layout = function()
     return main, preview
 end
 
+--- @param winid number
+local set_win_opts = function(winid)
+    vim.api.nvim_set_option_value('winblend', 0, { win = winid })
+    vim.api.nvim_set_option_value('winbar', "", { win = winid })
+    vim.api.nvim_set_option_value('cursorline', true, { win = winid })
+    vim.api.nvim_set_option_value('signcolumn', 'no', { win = winid })
+    vim.api.nvim_set_option_value('scrolloff', 0, { win = winid })
+    vim.api.nvim_set_option_value('wrap', false, { win = winid })
+    vim.api.nvim_set_option_value('foldenable', false, { win = winid })
+    vim.api.nvim_set_option_value('colorcolumn', '0', { win = winid })
+    vim.api.nvim_set_option_value('winfixbuf', true, { win = winid })
+    vim.api.nvim_set_option_value('winfixwidth', true, { win = winid })
+end
+
+
+--- @param rt_ctx table runtime_ctx
+_M.render = function(rt_ctx)
+    local main, preview = gen_win_layout()
+    rt_ctx.winid = vim.api.nvim_open_win(rt_ctx.bufnr, true, main)
+    set_win_opts(rt_ctx.winid)
+
+    if cfg.float_diff == true then
+        rt_ctx.preview_layout = preview
+    elseif preview.win == nil then
+        preview.win = rt_ctx.winid
+    end
+end
+
+_M.render_diff = function(rt_ctx)
+    if rt_ctx.p_winid and vim.api.nvim_win_is_valid(rt_ctx.p_winid) then
+        return
+    end
+
+    rt_ctx.p_winid = vim.api.nvim_open_win(rt_ctx.p_bufnr, false, rt_ctx.preview_layout)
+    set_win_opts(rt_ctx.p_winid)
+end
+
 return _M
