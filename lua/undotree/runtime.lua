@@ -2,6 +2,7 @@ local cfg = require("undotree.config")
 local kit = require("undotree.kit")
 local ui = require("undotree.ui")
 local action = require("undotree.action")
+local parser = require("undotree.parser")
 local fmt = string.format
 
 local _M = {}
@@ -20,8 +21,6 @@ local ctx = {
     max_seq = nil,
     line2seq = nil,
     seq2line = nil,
-    parser_ctx = {
-    },
 
     diff_ctx = {
         last_cur_seq = nil,
@@ -114,10 +113,12 @@ local set_keymaps = function()
 end
 
 local set_buf_options = function()
-    vim.api.nvim_set_option_value("filetype", "Undotree", { buf = ctx.bufnr })
+    vim.api.nvim_set_option_value("filetype", "undotree", { buf = ctx.bufnr })
+    vim.api.nvim_set_option_value("undolevels", -1, { buf = ctx.bufnr })
     vim.api.nvim_set_option_value("modifiable", false, { buf = ctx.bufnr })
 
     vim.api.nvim_set_option_value("filetype", "UndotreeDiff", { buf = ctx.p_bufnr })
+    vim.api.nvim_set_option_value("undolevels", -1, { buf = ctx.p_bufnr })
     vim.api.nvim_set_option_value("modifiable", false, { buf = ctx.p_bufnr })
 end
 
@@ -147,6 +148,10 @@ _M.open = function()
     -- 4. render the window
     ui.render(ctx)
     ui.render_diff(ctx)
+
+    kit.modify_buf(ctx.bufnr, function()
+        vim.api.nvim_buf_set_lines(ctx.bufnr, 0, -1, false, parser.parse_undotree(ctx))
+    end)
 end
 
 _M.close = function()

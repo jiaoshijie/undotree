@@ -72,10 +72,10 @@ _M.time_ago = function(t)
     if tick < 60 then return fmt_time("sec") end
 
     tick = round(tick / 60)
-    if tick < 3600 then return fmt_time("min") end
+    if tick < 60 then return fmt_time("min") end
 
     tick = round(tick / 60)
-    if tick < 86400 then return fmt_time("hour") end
+    if tick < 24 then return fmt_time("hour") end
 
     tick = round(tick / 24)
     return fmt_time("day")
@@ -88,9 +88,9 @@ _M.modify_buf = function(bufnr, cb)
         return
     end
 
-    vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
-    cb()
     vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
+    cb()
+    vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
 end
 
 --- @param seq integer

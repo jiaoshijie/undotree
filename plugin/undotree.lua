@@ -1,11 +1,12 @@
 local highlights = {
-    UndotreeFirstNode = { default = true, link = "Function" },
+    UndotreeFirstNode = { default = true, link = "Conceal" },
     UndotreeNode = { default = true, link = "Question" },
-    UndotreeSeq = { default = true, link = "Comment" },
+    UndotreeSeq = { default = true, link = "Question" },
     UndotreeCurrent = { default = true, link = "Statement" },
-    UndotreeTimeStamp = { default = true, link = "Function" },
-    UndotreeSaved = { default = true, link = "Conceal" },
+    UndotreeTimeStamp = { default = true, link = "Conceal" },
+    UndotreeSaved = { default = true, link = "Label" },
     UndotreeBranch = { default = true, link = "Constant" },
+
     UndotreeDiffLine = { default = true, link = "diffLine" },
     UndotreeDiffAdded = { default = true, link = "diffAdded" },
     UndotreeDiffRemoved = { default = true, link = "diffRemoved" },

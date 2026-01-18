@@ -5,7 +5,7 @@ _M.common = {
     -- Because these buffer's buftype is likely not empty, e.g. quickfix, help.
     ignore_filetype = {},
     --- @type "compact" | "legacy"
-    parser = "compact",
+    parser = "legacy",   -- TODO: change to compact
 }
 
 _M.ui_cfg = {
