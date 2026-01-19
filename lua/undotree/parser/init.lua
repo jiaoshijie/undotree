@@ -23,10 +23,11 @@ local _M = {}
 
 --- @alias AsciiGraphLine AsciiGraphCell[]
 
---- @class Line2Seq
+--- @class SeqLine
 --- @field seq_node SeqNode?
 --- @field graph_line AsciiGraphLine  it will be cleared after generate the real ascii graph
 
+--- @alias Line2Seq SeqLine[]
 --- @alias Seq2Line integer[]
 
 -------------------------------------------------------------------------------
@@ -96,7 +97,7 @@ local gen_ascii_graph = function(rt_ctx)
                 v.seq_node.stat.save and " s" or "",
                 kit.time_ago(v.seq_node.stat.time))
             else
-                line = fmt("%s (Original)", line)
+                line = fmt("%s    0 (Original)", line)
             end
             v.seq_node.stat = nil
         end

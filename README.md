@@ -17,8 +17,8 @@ to get the up-to-date view.
 
 ## TODO
 
-- [ ] refactor this plugin, remove the metatable usage, using data oriented style instead
-- [ ] only parse the neovim internal undotree structure once at startup.
+- [x] refactor this plugin, remove the metatable usage, using data oriented style instead
+- [x] only parse the neovim internal undotree structure once at startup.
   + let the user refresh the undotree view manually
 - [x] support jump between undotree main and preview windows
 - [ ] provide a command to clear the whole undo histroy of a file

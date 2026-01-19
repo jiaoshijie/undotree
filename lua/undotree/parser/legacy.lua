@@ -41,7 +41,7 @@ end
 --- @param rt_ctx table runtime_ctx
 --- @param root UndoTree
 _M.parse = function(rt_ctx, root)
-    local line2seq = {}  --- @type Line2Seq[]
+    local line2seq = {}  --- @type Line2Seq
     parse_recursively(root, line2seq, 1, 1)
     rt_ctx.line2seq = kit.reverse_table(line2seq)
 end

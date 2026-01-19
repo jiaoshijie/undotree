@@ -3,9 +3,13 @@ local kit = require("undotree.kit")
 local ui = require("undotree.ui")
 local action = require("undotree.action")
 local parser = require("undotree.parser")
+local diff = require("undotree.diff")
 local fmt = string.format
 
 local _M = {}
+
+--- @type integer
+local diff_ns = nil
 
 local ctx = {
     winid = nil,
@@ -17,10 +21,11 @@ local ctx = {
     target_bufnr = nil,
     win_fix_buf = nil,
 
+    prev_seq = nil,
     cur_seq = nil,
     max_seq = nil,
-    line2seq = nil,
-    seq2line = nil,
+    line2seq = nil,  --- @type Line2Seq
+    seq2line = nil,  --- @type Seq2Line
 
     diff_ctx = {
         last_cur_seq = nil,
@@ -41,19 +46,19 @@ local validate_env = function()
     -- 2. if buftype is not empty do not open undotree
     -- This also prevents user open the undotree from command line window
     if #vim.bo.buftype > 0 then
-        kit.echo_err_msg("This buffer is not associated with a disk file")
+        kit.echo_err_msg("buftype is not empty `:h 'buftype'`")
         return false
     end
 
     -- 3. if this buffer is `nomodifiable`
     if vim.bo.modifiable ~= true then
-        kit.echo_err_msg("This buffer is nomodifiable")
+        kit.echo_err_msg("buffer is nomodifiable")
         return false
     end
 
     -- 4. if this file is read-only
     if vim.bo.readonly == true then
-        kit.echo_err_msg("This buffer is readonly")
+        kit.echo_err_msg("buffer is readonly")
         return false
     end
 
@@ -61,6 +66,10 @@ local validate_env = function()
     if vim.tbl_contains(cfg.common.ignore_filetype, vim.bo.filetype) then
         kit.echo_err_msg(fmt("filetype `%s` is ignored", vim.bo.filetype))
         return false
+    end
+
+    if not diff_ns then
+        diff_ns = vim.api.nvim_create_namespace("undotree_diff_preview_ns")
     end
 
     return true
@@ -132,6 +141,106 @@ local prepare_buffers = function()
     set_events()
 end
 
+local update_mark = function(lnum)
+  -- >num< : The current state
+  local prev_line, cur_line, prev_lnum
+
+  if ctx.prev_seq then
+      prev_lnum = ctx.seq2line[ctx.prev_seq]
+      prev_line = vim.fn.substitute(vim.fn.getline(prev_lnum),
+                    [[\zs>\(\d\+\)<\ze]], [[\1]], "")
+  end
+  cur_line = vim.fn.substitute(vim.fn.getline(lnum), [[\zs\(\d\+\)\ze]], [[>\1<]], "")
+
+  kit.modify_buf(ctx.bufnr, function()
+      if prev_line then vim.fn.setline(prev_lnum, prev_line) end
+      vim.fn.setline(lnum, cur_line)
+  end)
+end
+
+local update_diff = function(lnum)
+    local cursor_seq = ctx.line2seq[lnum].seq_node.seq
+
+    local lines, hls = diff.get_diff_content(ctx, ctx.cur_seq, cursor_seq)
+    if lines == nil or hls == nil then return end
+
+    if cfg.ui_cfg.float_diff and cursor_seq == ctx.cur_seq then
+        if ctx.p_winid and vim.api.nvim_win_is_valid(ctx.p_winid) then
+            kit.win_delete(ctx.p_winid, true)
+            ctx.p_winid = nil
+        end
+        return
+    end
+
+    kit.modify_buf(ctx.p_bufnr, function()
+        vim.api.nvim_buf_set_lines(ctx.p_bufnr, 0, -1, false, lines)
+        for i, hl in ipairs(hls) do
+            vim.hl.range(ctx.p_bufnr, diff_ns, hl, { i - 1, 0 }, { i - 1, -1 })
+        end
+    end)
+
+    if not ctx.p_winid then
+        ui.render_diff(ctx)
+    end
+end
+
+_M.apply = function(lnum)
+    local seqline = ctx.line2seq[lnum]
+    if not seqline or not seqline.seq_node then return end
+    ctx.prev_seq = ctx.cur_seq
+    ctx.cur_seq = seqline.seq_node.seq
+    update_mark(lnum)
+    kit.undo2(ctx.target_winid, ctx.cur_seq)
+    update_diff(lnum)
+end
+
+--- @param lnum integer
+--- @param direction integer
+--- @param apply boolean?
+_M.set_cursor = function(lnum, direction, apply)
+    -- NOTE: does not need to check boundaries
+    while ctx.line2seq[lnum] == nil do
+        lnum = lnum + direction
+    end
+
+    local col = string.find(vim.fn.getline(lnum), "*")
+    vim.api.nvim_win_set_cursor(ctx.winid, { lnum, col and col - 1 or 0 })
+
+    if apply then
+        _M.apply(lnum)
+    else
+        update_diff(lnum)
+    end
+end
+
+--- @param direction integer
+--- @param apply boolean?
+_M.move_selection = function(direction, apply)
+    local pos = vim.api.nvim_win_get_cursor(ctx.winid)
+    local lnum = pos[1] + direction
+    if lnum <= 0 or lnum > #ctx.line2seq then return end
+
+    _M.set_cursor(lnum, direction, apply)
+end
+
+--- @param nullable boolean
+_M.update_graph = function(nullable)
+    local graph = parser.parse_undotree(ctx)
+    if nullable and graph == nil then
+        return
+    end
+
+    assert(graph ~= nil)
+    kit.modify_buf(ctx.bufnr, function()
+        vim.api.nvim_buf_set_lines(ctx.bufnr, 0, -1, false, graph)
+    end)
+
+    local lnum = ctx.seq2line[ctx.cur_seq]
+    -- 0 is OK
+    _M.set_cursor(lnum, 0)
+    update_mark(lnum)
+end
+
 --- @return boolean
 _M.is_opened = function()
     return ctx.bufnr ~= nil
@@ -140,18 +249,11 @@ end
 _M.open = function()
     if not validate_env() then return end
     set_target()
-    -- 1. parse the internal undotree
-    -- 2. get diff content by default it should always be empty
 
-    -- 3. perpare the buffers
     prepare_buffers()
-    -- 4. render the window
     ui.render(ctx)
-    ui.render_diff(ctx)
 
-    kit.modify_buf(ctx.bufnr, function()
-        vim.api.nvim_buf_set_lines(ctx.bufnr, 0, -1, false, parser.parse_undotree(ctx))
-    end)
+    _M.update_graph(false)
 end
 
 _M.close = function()
@@ -173,8 +275,14 @@ _M.close = function()
     ctx.p_bufnr = nil
     vim.api.nvim_clear_autocmds({ group = "undotree_rt_event" })
 
-    -- TODO: cseq
-    -- TODO: clear parser_ctx
+    ctx.prev_seq = nil
+    ctx.cur_seq = nil
+    ctx.max_seq = nil
+    ctx.line2seq = nil
+    ctx.seq2line = nil
+
+    ctx.diff_ctx.last_cur_seq = nil
+    ctx.diff_ctx.last_cursor_seq = nil
 
     ctx.preview_layout = nil
 end
