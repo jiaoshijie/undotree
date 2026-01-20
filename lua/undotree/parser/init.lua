@@ -21,11 +21,12 @@ local _M = {}
 --- @field char string single character '*' '|' '/' '\' '-' '+'
 -- '*' '|' '+' only at odd col, '/' '\' '-' only at even col
 
---- @alias AsciiGraphLine AsciiGraphCell[]
+--- @alias AsciiGraphLine AsciiGraphCell[]?
 
 --- @class SeqLine
 --- @field seq_node SeqNode?
 --- @field graph_line AsciiGraphLine  it will be cleared after generate the real ascii graph
+--- @field is_branch boolean?   ture: is a merge/split line, nil or false: is a node line
 
 --- @alias Line2Seq SeqLine[]
 --- @alias Seq2Line integer[]
@@ -89,6 +90,9 @@ local gen_ascii_graph = function(rt_ctx)
             line = line .. c.char
             col = col + 1
         end
+        -- NOTE: clear members that will no longer be used
+        v.graph_line = nil
+        v.is_branch = nil
 
         if v.seq_node then
             seq2line[v.seq_node.seq] = lnum
@@ -99,6 +103,7 @@ local gen_ascii_graph = function(rt_ctx)
             else
                 line = fmt("%s    0 (Original)", line)
             end
+            -- NOTE: clear member that will no longer be used
             v.seq_node.stat = nil
         end
 
