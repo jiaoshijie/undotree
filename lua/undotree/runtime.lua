@@ -82,6 +82,20 @@ local set_target = function()
     vim.api.nvim_set_option_value("winfixbuf", true, { win = ctx.target_winid })
 end
 
+-- NOTE: this function should rarely be called
+local gracefully_quit = function()
+    local win_num = cfg.ui_cfg.float_diff and 2 or 3
+
+    if kit.get_cur_tab_layout_wins() <= win_num then
+        local cmd = #vim.api.nvim_list_tabpages() > 1 and "tabclose" or "qall"
+        local save_ei = vim.o.eventignore
+        vim.o.eventignore = "all"
+        vim.cmd(cmd)
+        vim.o.eventignore = save_ei
+    end
+    _M.close()
+end
+
 local set_events = function()
     local group = vim.api.nvim_create_augroup("undotree_rt_event", { clear = true })
     vim.api.nvim_create_autocmd("WinClosed", {
@@ -89,9 +103,7 @@ local set_events = function()
         group = group,
         callback = function(ev)
             -- Both <amatch> and <afile> are set to the |window-ID|
-            if tonumber(ev.match) == ctx.winid then
-                _M.close()
-            end
+            if tonumber(ev.match) == ctx.winid then _M.close() end
         end,
     })
     vim.api.nvim_create_autocmd("WinClosed", {
@@ -99,13 +111,13 @@ local set_events = function()
         group = group,
         callback = function() _M.close() end,
     })
+
+    -- NOTE: this event should rarely be triggered
     vim.api.nvim_create_autocmd("WinClosed", {
         buffer = ctx.target_bufnr,
         group = group,
         callback = function(ev)
-            if tonumber(ev.match) == ctx.target_winid then
-                _M.close()
-            end
+            if tonumber(ev.match) == ctx.target_winid then gracefully_quit() end
         end,
     })
 end
@@ -261,6 +273,7 @@ _M.close = function()
 
     if vim.api.nvim_win_is_valid(ctx.target_winid) then
         vim.api.nvim_set_option_value("winfixbuf", ctx.win_fix_buf, { win = ctx.target_winid })
+        vim.api.nvim_set_current_win(ctx.target_winid)
     end
     ctx.target_bufnr = nil
     ctx.target_winid = nil

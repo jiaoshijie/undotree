@@ -19,7 +19,7 @@ local gen_win_layout = function()
         noautocmd = true,
     }
 
-    if cfg.float_diff == false then
+    if not cfg.float_diff then
         local preview = {
             -- nil using the main winid
             -- default is left_bottom
@@ -82,7 +82,7 @@ _M.render = function(rt_ctx)
     rt_ctx.winid = vim.api.nvim_open_win(rt_ctx.bufnr, true, main)
     set_win_opts(rt_ctx.winid, true)
 
-    if cfg.float_diff == false and preview.win == nil then
+    if not cfg.float_diff and preview.win == nil then
         preview.win = rt_ctx.winid
     end
 

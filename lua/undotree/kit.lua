@@ -113,4 +113,17 @@ _M.undo2 = function(winid, seq)
     return ok
 end
 
+--- get the number of windows except floating window
+--- @return integer
+_M.get_cur_tab_layout_wins = function()
+    local all_wins = vim.api.nvim_tabpage_list_wins(0)
+    local num = 0
+    for _, id in next, all_wins do
+        if vim.api.nvim_win_get_config(id).relative == "" then
+            num = num + 1
+        end
+    end
+    return num
+end
+
 return _M
