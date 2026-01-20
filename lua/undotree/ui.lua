@@ -59,7 +59,7 @@ local gen_win_layout = function()
     return main, preview
 end
 
---- @param winid number
+--- @param winid integer
 --- @param undo_win boolean
 local set_win_opts = function(winid, undo_win)
     vim.api.nvim_set_option_value('cursorline', undo_win, { win = winid })

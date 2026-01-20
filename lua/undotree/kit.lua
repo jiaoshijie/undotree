@@ -10,7 +10,7 @@ _M.echo_info_msg = function(msg)
     vim.api.nvim_echo({ { fmt("undotree: %s", msg) } }, true, { err = false })
 end
 
---- @param bufnr number
+--- @param bufnr integer
 _M.buf_delete = function(bufnr)
     if not bufnr or not vim.api.nvim_buf_is_valid(bufnr) then
         return
@@ -25,7 +25,7 @@ _M.buf_delete = function(bufnr)
     vim.o.report = start_report
 end
 
---- @param win_id number
+--- @param win_id integer
 --- @param force boolean see :h nvim_win_close
 _M.win_delete = function(win_id, force)
     if not win_id or not vim.api.nvim_win_is_valid(win_id) then
@@ -53,7 +53,7 @@ _M.reverse_table = function(T)
   return T
 end
 
---- @param winid ?number
+--- @param winid integer?
 --- @return boolean
 _M.winid_in_tab = function(winid)
     if winid == nil then return false end
