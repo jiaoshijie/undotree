@@ -211,7 +211,7 @@ end
 --- @param apply boolean?
 _M.set_cursor = function(lnum, direction, apply)
     -- NOTE: does not need to check boundaries
-    while ctx.line2seq[lnum] == nil do
+    while ctx.line2seq[lnum].seq_node == nil do
         lnum = lnum + direction
     end
 
