@@ -1,6 +1,7 @@
 local cfg = require("undotree.config").common
 local kit = require("undotree.kit")
 local fmt = string.format
+local rep = string.rep
 
 local _M = {}
 
@@ -73,7 +74,7 @@ local function gen_undotree_recursively(root, entries)
     end
 end
 
-local gen_ascii_graph = function(rt_ctx)
+local gen_ascii_graph = function(rt_ctx, max_col)
     local line2seq = rt_ctx.line2seq
     local seq2line = {}
     local graph = {}
@@ -97,11 +98,12 @@ local gen_ascii_graph = function(rt_ctx)
         if v.seq_node then
             seq2line[v.seq_node.seq] = lnum
             if v.seq_node.seq ~= 0 then
-                line = fmt("%s    %d%s (%s)", line, v.seq_node.seq,
+                line = fmt("%s  %s%d%s (%s)", line, rep(" ", max_col - #line),
+                v.seq_node.seq,
                 v.seq_node.stat.save and " s" or "",
                 kit.time_ago(v.seq_node.stat.time))
             else
-                line = fmt("%s    0 (Original)", line)
+                line = fmt("%s  %s0 (Original)", line, rep(" ", max_col - #line))
             end
             -- NOTE: clear member that no longer be used
             v.seq_node.stat = nil
@@ -131,13 +133,14 @@ _M.parse_undotree = function(rt_ctx)
     local root = new_seq_node(0, -1, -1, nil)
     gen_undotree_recursively(root, tree_ctx.entries)
 
+    local max_col
     if type(cfg.parser) == "string" and cfg.parser == "legacy" then
-        require("undotree.parser.legacy").parse(rt_ctx, root)
+        max_col = require("undotree.parser.legacy").parse(rt_ctx, root)
     else
-        require("undotree.parser.compact").parse(rt_ctx, root)
+        max_col = require("undotree.parser.compact").parse(rt_ctx, root)
     end
 
-    return gen_ascii_graph(rt_ctx)
+    return gen_ascii_graph(rt_ctx, max_col)
 end
 
 return _M

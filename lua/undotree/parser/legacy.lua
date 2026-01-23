@@ -1,5 +1,6 @@
 local kit = require("undotree.kit")
 local _M = {}
+local maximum_col = 0
 
 local goc = function(t, i)
     t[i] = t[i] or { graph_line = {} }
@@ -21,6 +22,8 @@ local function parse_recursively(root, line2seq, lnum, col)
     table.insert(g_line, { col = col, char = '*' })
     local max_col = col - 2
 
+    if maximum_col < col then maximum_col = col end
+
     if not root.children then return col end
 
     for _, node in ipairs(root.children) do
@@ -41,10 +44,13 @@ end
 
 --- @param rt_ctx table runtime_ctx
 --- @param root UndoTree
+--- @return integer
 _M.parse = function(rt_ctx, root)
     local line2seq = {}  --- @type Line2Seq
+    maximum_col = 0
     parse_recursively(root, line2seq, 1, 1)
     rt_ctx.line2seq = kit.reverse_table(line2seq)
+    return maximum_col
 end
 
 return _M

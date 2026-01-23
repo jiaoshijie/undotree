@@ -1,5 +1,6 @@
 local kit = require("undotree.kit")
 local _M = {}
+local maximum_col = 0
 
 local goc = function(t, i)
     t[i] = t[i] or { graph_line = {} }
@@ -92,7 +93,7 @@ local put_seq_node = function(node, line2seq, lnum, col, split)
     elseif split then
         col = new_branch_line(line2seq, lnum, col, false)
         lnum = lnum + 1
-    elseif col - 2 > cur_col then  -- check if can merge or not
+    elseif col - 2 > cur_col then  -- check if can merge
         col = new_branch_line(line2seq, lnum, col, true)
         lnum = lnum + 1
     end
@@ -128,6 +129,10 @@ local function parse_recursively(root, line2seq, lnum, col, split)
 
     lnum, col = put_seq_node(root, line2seq, lnum, col, split)
 
+    -- NOTE: I know this will not get the true maximum column number,
+    -- but put it here making the code more clean.
+    if maximum_col < col then maximum_col = col end
+
     if not root.children then return end
 
     for i, node in ipairs(root.children) do
@@ -142,8 +147,11 @@ end
 --- @param root UndoTree
 _M.parse = function(rt_ctx, root)
     local line2seq = {}  --- @type Line2Seq
+    maximum_col = 0
     parse_recursively(root, line2seq, 1, 1, false)
     rt_ctx.line2seq = kit.reverse_table(line2seq)
+    -- NOTE: `+ 2`: to fix the false maximum column number above
+    return maximum_col + 2
 end
 
 return _M
