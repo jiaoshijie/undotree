@@ -90,7 +90,7 @@ local gen_ascii_graph = function(rt_ctx)
             line = line .. c.char
             col = col + 1
         end
-        -- NOTE: clear members that will no longer be used
+        -- NOTE: clear members that no longer be used
         v.graph_line = nil
         v.is_branch = nil
 
@@ -103,7 +103,7 @@ local gen_ascii_graph = function(rt_ctx)
             else
                 line = fmt("%s    0 (Original)", line)
             end
-            -- NOTE: clear member that will no longer be used
+            -- NOTE: clear member that no longer be used
             v.seq_node.stat = nil
         end
 

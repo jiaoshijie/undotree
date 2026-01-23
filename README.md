@@ -17,24 +17,11 @@ to get the up-to-date view.
 
 ## TODO
 
-- [x] refactor this plugin, remove the metatable usage, using data oriented style instead
-- [x] only parse the neovim internal undotree structure once at startup.
-  + let the user refresh the undotree view manually
-- [x] support jump between undotree main and preview windows
+- [ ] check how to nodes being deleted when exceeds the undolevels
+- [ ] add tests
 - [ ] provide a command to clear the whole undo histroy of a file
-- [x] need a way to make sure target winid and buffer are matched
-- [x] redesign command
-  + `close`
-    * just close the undotree
-  + `open`
-    * if not opened and the buffer type is supported(also check the modifiable/readonly flag), open the undotree
-    * if already opened, report a warning, do nothing
-  + `toggle`
-    * if not opened and the buffer type is supported, open the undotree, otherwise, report an warning
-    * if opened and the undotree window is in the current tab page, close it
-    * if opened and the undotreee window is not in the current tab page
-      + if the buf type is supported, close the previous one then open it for the new bufnr.
-      + if buf type is not supported, also close the previous one and report a warning
+- [ ] provide a command to delete a branch of nodes
+- [ ] explains to the user how to rename a file but keep the undofile
 
 ### Requirements
 

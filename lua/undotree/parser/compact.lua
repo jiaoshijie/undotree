@@ -6,30 +6,41 @@ local goc = function(t, i)
     return t[i]
 end
 
+--- @param g_line AsciiGraphCell[]
 --- @return integer
-local shift_col_by_branch = function(g_line, col)
+local get_max_col = function(g_line)
+    return #g_line == 0 and -1 or g_line[#g_line].col
+end
+
+--- @param g_line AsciiGraphCell[]
+--- @param col integer
+--- @return integer
+local adjust_branch_line = function(g_line, col)
     local cell = g_line[#g_line]
-    if cell.char == '/' then
-        if cell.col == col + 1 or cell.col == col - 1 then
-            if cell.col ~= col + 1 then
-                table.insert(g_line, { char = '/', col = col + 1 })
-            end
-            return col + 2
+    if cell.char == '/' and (cell.col == col + 1 or cell.col == col - 1) then
+        if cell.col ~= col + 1 then
+            table.insert(g_line, { char = '/', col = col + 1 })
         end
+        return col + 2
     elseif cell.char == '\\' then
         if cell.col ~= col - 1 then
             table.insert(g_line, { char = '\\', col = col - 1 })
         end
         return col - 2
     end
-    -- |
+
     if cell.col ~= col then
         table.insert(g_line, { char = '|', col = col })
     end
     return col
 end
 
-local merge = function(line2seq, lnum, col)
+--- @param line2seq Line2Seq
+--- @param lnum integer
+--- @param col integer
+--- @param is_merge boolean
+--- @return integer
+local new_branch_line = function(line2seq, lnum, col, is_merge)
     local newline = { is_branch = true, graph_line = {} }
     local p_line = goc(line2seq, lnum - 1).graph_line
     local p_len = #p_line
@@ -50,69 +61,47 @@ local merge = function(line2seq, lnum, col)
             pc = pc + 1
         end
     end
-    table.insert(newline.graph_line, { char = '\\', col = col + 1 })
-    table.insert(line2seq, lnum, newline)
-end
-
-local fork = function(line2seq, lnum, col)
-    local newline = { is_branch = true, graph_line = {} }
-    local p_line = goc(line2seq, lnum - 1).graph_line
-    local p_len = #p_line
-    local c_line = goc(line2seq, lnum).graph_line
-    local c_len = #c_line
-
-    local pc, cc = 1, 1
-    while pc <= p_len and cc <= c_len do
-        local pcol = p_line[pc].col
-        local ccol = c_line[cc].col
-        if pcol == ccol then
-            table.insert(newline.graph_line, { char = '|', col = pcol })
-            pc = pc + 1
-            cc = cc + 1
-        elseif pcol > ccol then
-            cc = cc + 1
-        else  -- pcol < ccol
-            pc = pc + 1
-        end
+    if is_merge then
+        col = col - 2
+        table.insert(newline.graph_line, { char = '\\', col = col + 1 })
+    else  -- fork
+        col = col + 2
+        table.insert(newline.graph_line, { char = '/', col = col - 1 })
     end
-    table.insert(newline.graph_line, { char = '/', col = col - 1 })
     table.insert(line2seq, lnum, newline)
+
+    return col
 end
 
---- @return integer
---- @return integer
-local insert_seqnode = function(node, line2seq, lnum, col, split)
+--- @return integer  -- lnum
+--- @return integer  -- col
+local put_seq_node = function(node, line2seq, lnum, col, split)
     local s_line = goc(line2seq, lnum)
+    local cur_col = get_max_col(s_line.graph_line)
+
     if s_line.is_branch then
+        -- NOTE: It must be `\`, because I am the node will put `|/` here.
+        -- below `\` and above `/` must already has a node
         if split then
             table.insert(s_line.graph_line, { char = '|', col = col })
         else
-            local cell = s_line.graph_line[#s_line.graph_line]
-            assert(cell.col ~= col - 1)
-            table.insert(s_line.graph_line, { char = '\\', col = col - 1 })
-            col = col - 2
+            assert(cur_col ~= col - 1) -- it must not belong to the previous branch
+            col = adjust_branch_line(s_line.graph_line, col)
         end
         lnum = lnum + 1
     elseif split then
-        col = col + 2
-        fork(line2seq, lnum, col)
+        col = new_branch_line(line2seq, lnum, col, false)
         lnum = lnum + 1
-    else
-        -- TODO: check if can merge
-        if col >= 3 then
-            if #s_line.graph_line == 0
-                or s_line.graph_line[#s_line.graph_line].col < col - 2 then
-                col = col - 2
-                merge(line2seq, lnum, col)
-                lnum = lnum + 1
-            end
-        end
+    elseif col - 2 > cur_col then  -- check if can merge or not
+        col = new_branch_line(line2seq, lnum, col, true)
+        lnum = lnum + 1
     end
+
     s_line = goc(line2seq, lnum)
     table.insert(s_line.graph_line, { char = '*', col = col })
     s_line.seq_node = node
 
-    return col, lnum
+    return lnum, col
 end
 
 local function parse_recursively(root, line2seq, lnum, col, split)
@@ -120,41 +109,24 @@ local function parse_recursively(root, line2seq, lnum, col, split)
     while distance > 0 do
         local s_line = goc(line2seq, lnum)
         if s_line.is_branch then
-            col = shift_col_by_branch(s_line.graph_line, col)
+            col = adjust_branch_line(s_line.graph_line, col)
         else
-            if #s_line.graph_line == 0 then
-                if col == 1 then
-                    table.insert(s_line.graph_line, { char = '|', col = col })
-                    goto inter_end
-                end
-                -- col is begger then 1, merge
-                col = col - 2
-                table.insert(s_line.graph_line, { char = '\\', col = col + 1 })
-                s_line.is_branch = true
+            local cur_col = get_max_col(s_line.graph_line)
+            if col - 2 == cur_col then
+                table.insert(s_line.graph_line, { char = '|', col = col })
+            elseif col > cur_col then
+                col = new_branch_line(line2seq, lnum, col, true)
                 goto outer_end
-            else
-                local cur_col = s_line.graph_line[#s_line.graph_line].col
-                if cur_col == col then
-                    goto inter_end
-                elseif col - 2 == cur_col then
-                    -- can not merge
-                    table.insert(s_line.graph_line, { char = '|', col = col })
-                else
-                    assert(cur_col < col)
-                    -- col is begger then cur_col, merge
-                    col = col - 2
-                    merge(line2seq, lnum, col)
-                    goto outer_end
-                end
             end
-            ::inter_end::
+            -- NOTE: if col == cur_col do nothing, just follow the branch
+            -- And there is no way cur_col bigger than col
             distance = distance - 1
         end
         ::outer_end::
         lnum = lnum + 1
     end
 
-    col, lnum = insert_seqnode(root, line2seq, lnum, col, split)
+    lnum, col = put_seq_node(root, line2seq, lnum, col, split)
 
     if not root.children then return end
 
@@ -162,6 +134,7 @@ local function parse_recursively(root, line2seq, lnum, col, split)
         parse_recursively(node, line2seq, lnum + 1, col, i ~= 1)
     end
 
+    -- clear no longer used variable
     root.children = nil
 end
 

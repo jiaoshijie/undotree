@@ -33,7 +33,7 @@ local function parse_recursively(root, line2seq, lnum, col)
         max_col = parse_recursively(node, line2seq, lnum + 1, col)
     end
 
-    -- NOTE: clear member that will no longer be used
+    -- NOTE: clear member that no longer be used
     root.children = nil
 
     return max_col
