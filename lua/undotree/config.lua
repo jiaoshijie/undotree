@@ -1,7 +1,7 @@
 local _M = {}
 
 _M.common = {
-    -- NOTE: some special buffer's filetypes don't need to put here. 
+    -- NOTE: some special buffer's filetypes don't need to put here.
     -- Because these buffer's buftype is likely not empty, e.g. quickfix, help.
     ignore_filetype = {},
     --- @type "compact" | "legacy"
@@ -33,7 +33,7 @@ _M.keymaps_cfg = {
     ['S'] = "update_undotree_view",
 }
 
--- NOTE: for backward compatibility
+-- NOTE: this code is ugly, but it's for backward compatibility
 _M.setup = function(cfg)
     _M.common = vim.tbl_extend("force", _M.common, {
         ignore_filetype = cfg.ignore_filetype,
