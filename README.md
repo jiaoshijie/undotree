@@ -17,11 +17,7 @@ to get the up-to-date view.
 
 ## TODO
 
-- [x] check how to nodes being deleted when exceeds the undolevels
-  - handle undonode be deleted situation
 - [ ] add tests
-- [ ] provide a command to clear the whole undo histroy of a file
-- [ ] provide a command to delete a branch of nodes
 - [ ] explains to the user how to rename a file but keep the undofile
 
 ### Requirements

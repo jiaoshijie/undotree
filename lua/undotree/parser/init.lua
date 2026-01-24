@@ -125,12 +125,12 @@ end
 _M.parse_undotree = function(rt_ctx)
     local tree_ctx = vim.fn.undotree(rt_ctx.target_bufnr)
 
-    if tree_ctx.seq_last == rt_ctx.max_seq then
+    if tree_ctx.seq_last == rt_ctx.max_seq and #tree_ctx.entries ~= 0 then
         return nil
     end
 
     rt_ctx.max_seq = tree_ctx.seq_last
-    rt_ctx.cur_seq = tree_ctx.seq_cur
+    rt_ctx.cur_seq = #tree_ctx.entries ~= 0 and tree_ctx.seq_cur or 0
     rt_ctx.line2seq = nil
     rt_ctx.seq2line = nil
 

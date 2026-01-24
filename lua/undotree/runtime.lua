@@ -133,6 +133,20 @@ local set_keymaps = function()
     vim.keymap.set("n", "q", function() _M.close() end, map_opts)
 end
 
+local set_user_cmd = function()
+    vim.api.nvim_buf_create_user_command(ctx.bufnr, "UndotreeClearHistory", function()
+        -- NOTE: this only clear the in-memory undo histroy.
+        -- To make the undo history clearing permanent, write the buffer to disk manually.
+        -- To discard this clearing, delete the buf from buflist or quit vim without saving this buffer.
+        local ok, ret = pcall(vim.fn.confirm, "Clear the whole undo history?", "&Yes\n&No", 2, "Warning")
+
+        if ok and ret == 1 then
+            kit.clear_whole_undo_history(ctx.target_bufnr)
+            _M.update_graph(true)
+        end
+    end, { nargs = 0 })
+end
+
 local set_buf_options = function()
     vim.api.nvim_set_option_value("filetype", "undotree", { buf = ctx.bufnr })
     vim.api.nvim_set_option_value("undolevels", -1, { buf = ctx.bufnr })
@@ -151,6 +165,7 @@ local prepare_buffers = function()
     set_buf_options()
     set_keymaps()
     set_events()
+    set_user_cmd()
 end
 
 local update_mark = function(lnum)

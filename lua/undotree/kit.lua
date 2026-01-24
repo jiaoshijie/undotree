@@ -126,4 +126,18 @@ _M.get_cur_tab_layout_wins = function()
     return num
 end
 
+--- clear the in-memory undo histroy
+_M.clear_whole_undo_history = function(bufnr)
+    assert(vim.api.nvim_buf_is_loaded(bufnr))
+    local old_undolevels = vim.api.nvim_get_option_value("undolevels", { buf = bufnr })
+    if old_undolevels == -1 then
+        kit.echo_info_msg("`undolevels` is -1, no undo histroy need to be clear")
+        return
+    end
+    vim.api.nvim_set_option_value("undolevels", -1, { buf = bufnr })
+    vim.api.nvim_buf_set_lines(bufnr, 0, 0, false, { "" })
+    vim.api.nvim_buf_set_lines(bufnr, 0, 1, false, {})
+    vim.api.nvim_set_option_value("undolevels", old_undolevels, { buf = bufnr })
+end
+
 return _M
