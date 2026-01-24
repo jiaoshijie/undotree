@@ -17,7 +17,8 @@ to get the up-to-date view.
 
 ## TODO
 
-- [ ] check how to nodes being deleted when exceeds the undolevels
+- [x] check how to nodes being deleted when exceeds the undolevels
+  - handle undonode be deleted situation
 - [ ] add tests
 - [ ] provide a command to clear the whole undo histroy of a file
 - [ ] provide a command to delete a branch of nodes

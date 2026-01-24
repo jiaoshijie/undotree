@@ -34,6 +34,8 @@ local _M = {}
 
 -------------------------------------------------------------------------------
 
+local minimum_seq = math.huge
+
 --- @param seq integer
 --- @param pseq integer
 --- @param time integer
@@ -51,6 +53,8 @@ local new_seq_node = function(seq, pseq, time, save)
 end
 
 local insert_seq_node = function(t, n)
+    if n.seq < minimum_seq then minimum_seq = n.seq end
+
     for i, v in ipairs(t) do
         if v.seq < n.seq then
             table.insert(t, i, n)
@@ -97,13 +101,13 @@ local gen_ascii_graph = function(rt_ctx, max_col)
 
         if v.seq_node then
             seq2line[v.seq_node.seq] = lnum
-            if v.seq_node.seq ~= 0 then
+            if v.seq_node.seq ~= minimum_seq then
                 line = fmt("%s  %s%d%s (%s)", line, rep(" ", max_col - #line),
                 v.seq_node.seq,
                 v.seq_node.stat.save and " s" or "",
                 kit.time_ago(v.seq_node.stat.time))
             else
-                line = fmt("%s  %s0 (Original)", line, rep(" ", max_col - #line))
+                line = fmt("%s  %s%d (Orig)", line, rep(" ", max_col - #line), minimum_seq)
             end
             -- NOTE: clear member that no longer be used
             v.seq_node.stat = nil
@@ -131,7 +135,20 @@ _M.parse_undotree = function(rt_ctx)
     rt_ctx.seq2line = nil
 
     local root = new_seq_node(0, -1, -1, nil)
+    minimum_seq = math.huge
     gen_undotree_recursively(root, tree_ctx.entries)
+    minimum_seq = minimum_seq == math.huge and 0 or minimum_seq - 1
+
+    if minimum_seq ~= 0 then
+        -- NOTE: fix the undo nodes exceed the `undolevels` situation
+        root.seq = minimum_seq
+        root.parent_seq = root.seq - 1
+        if root.children then
+            for _, child in next, root.children do
+                child.parent_seq = root.seq
+            end
+        end
+    end
 
     local max_col
     if type(cfg.parser) == "string" and cfg.parser == "legacy" then
