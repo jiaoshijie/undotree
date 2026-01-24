@@ -15,11 +15,6 @@ only parse the internal undotree structure once as you open this plugin, if you 
 file when the undotree opened, then the undotree view is out-of-dated, you must reopen it
 to get the up-to-date view.
 
-## TODO
-
-- [ ] add tests
-- [ ] explains to the user how to rename a file but keep the undofile
-
 ### Requirements
 
 - nvim 0.11.0 or above

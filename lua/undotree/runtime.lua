@@ -145,6 +145,10 @@ local set_user_cmd = function()
             _M.update_graph(true)
         end
     end, { nargs = 0 })
+
+    vim.api.nvim_buf_create_user_command(ctx.bufnr, "UndotreeRename", function()
+        kit.rename(ctx.target_bufnr)
+    end, { nargs = 0 })
 end
 
 local set_buf_options = function()

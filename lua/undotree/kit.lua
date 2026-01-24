@@ -140,4 +140,58 @@ _M.clear_whole_undo_history = function(bufnr)
     vim.api.nvim_set_option_value("undolevels", old_undolevels, { buf = bufnr })
 end
 
+_M.rename = function(bufnr)
+    local old_path = vim.api.nvim_buf_get_name(bufnr)
+    if #old_path == 0 then
+        _M.echo_err_msg("This buffer is not associated with a disk file, just use `:w {filename}`")
+        return
+    end
+
+    local new_path = nil
+    vim.ui.input({
+        prompt = "Rename To: ",
+        default = old_path,
+        completion = "dir",
+    }, function(path) new_path = path end)
+    vim.cmd("redraw") -- refresh the command line
+
+    if not new_path then return end
+
+    if new_path:sub(1, 1) ~= '/' then
+        _M.echo_err_msg("Must be a absolute path")
+        return
+    end
+
+    if new_path:sub(#new_path, #new_path) == '/' then
+        -- if the new path is a directory, it is like moving the file to the directory
+        new_path = new_path .. vim.fn.fnamemodify(old_path, ":t")
+    end
+
+    -- `validate_env` already doing a lot checking
+
+    if new_path == old_path then return end
+
+    if vim.fn.filereadable(new_path) == 1 then
+        local ok, ret = pcall(vim.fn.confirm, "New path exists, overwrite it?", "&Yes\n&No", 2, "Warning")
+        if not ok or ret == 2 then
+            _M.echo_info_msg("Canceled")
+            return
+        end
+    end
+
+    local ok, _ = pcall(vim.fn.mkdir, vim.fn.fnamemodify(new_path, ":h"), 'p')
+    if not ok then
+        _M.echo_err_msg("Create nested directory failed")
+        return
+    end
+
+    if vim.fn.rename(old_path, new_path) ~= 0 then
+        _M.echo_err_msg("Rename failed")
+        return
+    end
+
+    vim.api.nvim_buf_set_name(bufnr, new_path)
+    vim.api.nvim_buf_call(bufnr, function() vim.cmd('silent! write!') end)
+end
+
 return _M
