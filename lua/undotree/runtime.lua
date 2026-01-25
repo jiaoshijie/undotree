@@ -24,8 +24,8 @@ local ctx = {
     prev_seq = nil,
     cur_seq = nil,
     max_seq = nil,
-    line2seq = nil,  --- @type Line2Seq
-    seq2line = nil,  --- @type Seq2Line
+    line2seq = nil, --- @type Line2Seq
+    seq2line = nil, --- @type Seq2Line
 
     diff_ctx = {
         last_cur_seq = nil,
@@ -103,13 +103,17 @@ local set_events = function()
         group = group,
         callback = function(ev)
             -- Both <amatch> and <afile> are set to the |window-ID|
-            if tonumber(ev.match) == ctx.winid then _M.close() end
+            if tonumber(ev.match) == ctx.winid then
+                _M.close()
+            end
         end,
     })
     vim.api.nvim_create_autocmd("WinClosed", {
         buffer = ctx.p_bufnr,
         group = group,
-        callback = function() _M.close() end,
+        callback = function()
+            _M.close()
+        end,
     })
 
     -- NOTE: this event should rarely be triggered
@@ -117,7 +121,9 @@ local set_events = function()
         buffer = ctx.target_bufnr,
         group = group,
         callback = function(ev)
-            if tonumber(ev.match) == ctx.target_winid then gracefully_quit() end
+            if tonumber(ev.match) == ctx.target_winid then
+                gracefully_quit()
+            end
         end,
     })
 end
@@ -126,11 +132,17 @@ local set_keymaps = function()
     local map_opts = { noremap = true, silent = true, buffer = ctx.bufnr }
 
     for k, v in pairs(cfg.keymaps_cfg) do
-        vim.keymap.set("n", k, function() action[v](ctx, _M) end, map_opts)
+        vim.keymap.set("n", k, function()
+            action[v](ctx, _M)
+        end, map_opts)
     end
     map_opts.buffer = ctx.p_bufnr
-    vim.keymap.set("n", "p", function() action["enter_diffbuf"](ctx, _M) end, map_opts)
-    vim.keymap.set("n", "q", function() _M.close() end, map_opts)
+    vim.keymap.set("n", "p", function()
+        action["enter_diffbuf"](ctx, _M)
+    end, map_opts)
+    vim.keymap.set("n", "q", function()
+        _M.close()
+    end, map_opts)
 end
 
 local set_user_cmd = function()
@@ -138,7 +150,8 @@ local set_user_cmd = function()
         -- NOTE: this only clear the in-memory undo histroy.
         -- To make the undo history clearing permanent, write the buffer to disk manually.
         -- To discard this clearing, delete the buf from buflist or quit vim without saving this buffer.
-        local ok, ret = pcall(vim.fn.confirm, "Clear the whole undo history?", "&Yes\n&No", 2, "Warning")
+        local ok, ret =
+            pcall(vim.fn.confirm, "Clear the whole undo history?", "&Yes\n&No", 2, "Warning")
 
         if ok and ret == 1 then
             kit.clear_whole_undo_history(ctx.target_bufnr)
@@ -173,27 +186,30 @@ local prepare_buffers = function()
 end
 
 local update_mark = function(lnum)
-  -- >num< : The current state
-  local prev_line, cur_line, prev_lnum
+    -- >num< : The current state
+    local prev_line, cur_line, prev_lnum
 
-  if ctx.prev_seq then
-      prev_lnum = ctx.seq2line[ctx.prev_seq]
-      prev_line = vim.fn.substitute(vim.fn.getline(prev_lnum),
-                    [[\zs>\(\d\+\)<\ze]], [[\1]], "")
-  end
-  cur_line = vim.fn.substitute(vim.fn.getline(lnum), [[\zs\(\d\+\)\ze]], [[>\1<]], "")
+    if ctx.prev_seq then
+        prev_lnum = ctx.seq2line[ctx.prev_seq]
+        prev_line = vim.fn.substitute(vim.fn.getline(prev_lnum), [[\zs>\(\d\+\)<\ze]], [[\1]], "")
+    end
+    cur_line = vim.fn.substitute(vim.fn.getline(lnum), [[\zs\(\d\+\)\ze]], [[>\1<]], "")
 
-  kit.modify_buf(ctx.bufnr, function()
-      if prev_line then vim.fn.setline(prev_lnum, prev_line) end
-      vim.fn.setline(lnum, cur_line)
-  end)
+    kit.modify_buf(ctx.bufnr, function()
+        if prev_line then
+            vim.fn.setline(prev_lnum, prev_line)
+        end
+        vim.fn.setline(lnum, cur_line)
+    end)
 end
 
 local update_diff = function(lnum)
     local cursor_seq = ctx.line2seq[lnum].seq_node.seq
 
     local lines, hls = diff.get_diff_content(ctx, ctx.cur_seq, cursor_seq)
-    if lines == nil or hls == nil then return end
+    if lines == nil or hls == nil then
+        return
+    end
 
     if cfg.ui_cfg.float_diff and cursor_seq == ctx.cur_seq then
         if ctx.p_winid and vim.api.nvim_win_is_valid(ctx.p_winid) then
@@ -217,7 +233,9 @@ end
 
 _M.apply = function(lnum)
     local seqline = ctx.line2seq[lnum]
-    if not seqline or not seqline.seq_node then return end
+    if not seqline or not seqline.seq_node then
+        return
+    end
     ctx.prev_seq = ctx.cur_seq
     ctx.cur_seq = seqline.seq_node.seq
     update_mark(lnum)
@@ -249,7 +267,9 @@ end
 _M.move_selection = function(direction, apply)
     local pos = vim.api.nvim_win_get_cursor(ctx.winid)
     local lnum = pos[1] + direction
-    if lnum <= 0 or lnum > #ctx.line2seq then return end
+    if lnum <= 0 or lnum > #ctx.line2seq then
+        return
+    end
 
     _M.set_cursor(lnum, direction, apply)
 end
@@ -278,7 +298,9 @@ _M.is_opened = function()
 end
 
 _M.open = function()
-    if not validate_env() then return end
+    if not validate_env() then
+        return
+    end
     set_target()
 
     prepare_buffers()
@@ -288,7 +310,9 @@ _M.open = function()
 end
 
 _M.close = function()
-    if not _M.is_opened() then return end
+    if not _M.is_opened() then
+        return
+    end
 
     if vim.api.nvim_win_is_valid(ctx.target_winid) then
         vim.api.nvim_set_option_value("winfixbuf", ctx.win_fix_buf, { win = ctx.target_winid })
@@ -321,7 +345,9 @@ end
 
 --- @return boolean
 _M.is_visible_on_cur_tab = function()
-    if not _M.is_opened() then return false end
+    if not _M.is_opened() then
+        return false
+    end
     return kit.winid_in_tab(ctx.winid)
 end
 

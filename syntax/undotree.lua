@@ -7,5 +7,3 @@ syn match UndotreeTimeStamp '(.*)$'
 syn match UndotreeSaved ' \zss\ze '
 syn match UndotreeBranch '[+|\/-]'
 ]])
-
--- vim:ts=4:sts=4:sw=4:et:ai:si:sta:

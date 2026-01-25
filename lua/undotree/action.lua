@@ -19,7 +19,9 @@ end
 _M.move2parent = function(rt_ctx, rt_ops)
     local pos = vim.api.nvim_win_get_cursor(rt_ctx.winid)
     local seqline = rt_ctx.line2seq[pos[1]]
-    if not seqline or not seqline.seq_node then return end
+    if not seqline or not seqline.seq_node then
+        return
+    end
     local seq = seqline.seq_node.parent_seq
     rt_ops.set_cursor(rt_ctx.seq2line[seq], 0)
 end

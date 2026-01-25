@@ -48,12 +48,14 @@ local new_seq_node = function(seq, pseq, time, save)
         stat = {
             time = time,
             save = save and true or false,
-        }
+        },
     }
 end
 
 local insert_seq_node = function(t, n)
-    if n.seq < minimum_seq then minimum_seq = n.seq end
+    if n.seq < minimum_seq then
+        minimum_seq = n.seq
+    end
 
     for i, v in ipairs(t) do
         if v.seq < n.seq then
@@ -88,7 +90,7 @@ local gen_ascii_graph = function(rt_ctx, max_col)
         for _, c in ipairs(v.graph_line) do
             if col ~= c.col then
                 assert(c.col > col)
-                line = line .. string.rep(' ', c.col - col)
+                line = line .. string.rep(" ", c.col - col)
                 col = c.col
             end
 
@@ -102,10 +104,14 @@ local gen_ascii_graph = function(rt_ctx, max_col)
         if v.seq_node then
             seq2line[v.seq_node.seq] = lnum
             if v.seq_node.seq ~= minimum_seq then
-                line = fmt("%s  %s%d%s (%s)", line, rep(" ", max_col - #line),
-                v.seq_node.seq,
-                v.seq_node.stat.save and " s" or "",
-                kit.time_ago(v.seq_node.stat.time))
+                line = fmt(
+                    "%s  %s%d%s (%s)",
+                    line,
+                    rep(" ", max_col - #line),
+                    v.seq_node.seq,
+                    v.seq_node.stat.save and " s" or "",
+                    kit.time_ago(v.seq_node.stat.time)
+                )
             else
                 line = fmt("%s  %s%d (Orig)", line, rep(" ", max_col - #line), minimum_seq)
             end

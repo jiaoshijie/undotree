@@ -13,23 +13,27 @@ local function parse_recursively(root, line2seq, lnum, col)
 
     if root.seq - root.parent_seq > 1 then
         for _ = 1, root.seq - root.parent_seq - 1 do
-            table.insert(g_line, { col = col, char = '|' })
+            table.insert(g_line, { col = col, char = "|" })
             lnum = lnum + 1
             g_line = goc(line2seq, lnum).graph_line
         end
     end
     line2seq[lnum].seq_node = root
-    table.insert(g_line, { col = col, char = '*' })
+    table.insert(g_line, { col = col, char = "*" })
     local max_col = col - 2
 
-    if maximum_col < col then maximum_col = col end
+    if maximum_col < col then
+        maximum_col = col
+    end
 
-    if not root.children then return col end
+    if not root.children then
+        return col
+    end
 
     for _, node in ipairs(root.children) do
         max_col = max_col + 2
         for i = col + 1, max_col do
-            table.insert(g_line, { col = i, char = i == max_col and '+' or '-' })
+            table.insert(g_line, { col = i, char = i == max_col and "+" or "-" })
         end
         col = max_col
 
@@ -46,7 +50,7 @@ end
 --- @param root UndoTree
 --- @return integer
 _M.parse = function(rt_ctx, root)
-    local line2seq = {}  --- @type Line2Seq
+    local line2seq = {} --- @type Line2Seq
     maximum_col = 0
     parse_recursively(root, line2seq, 1, 1)
     rt_ctx.line2seq = kit.reverse_table(line2seq)

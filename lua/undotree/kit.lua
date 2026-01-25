@@ -41,22 +41,24 @@ end
 ---@param T table
 ---@return table T
 _M.reverse_table = function(T)
-  if vim.tbl_isempty(T) then
+    if vim.tbl_isempty(T) then
+        return T
+    end
+
+    local len = #T
+    for i = 1, math.floor(len / 2), 1 do
+        T[i], T[len - i + 1] = T[len - i + 1], T[i]
+    end
+
     return T
-  end
-
-  local len = #T
-  for i = 1, math.floor(len / 2), 1 do
-    T[i], T[len - i + 1] = T[len - i + 1], T[i]
-  end
-
-  return T
 end
 
 --- @param winid integer?
 --- @return boolean
 _M.winid_in_tab = function(winid)
-    if winid == nil then return false end
+    if winid == nil then
+        return false
+    end
     return vim.fn.tabpagenr() == vim.fn.win_id2tabwin(winid)[1]
 end
 
@@ -69,13 +71,19 @@ _M.time_ago = function(t)
         return fmt("%s %s%s ago", tick, unit, tick > 1 and "s" or "")
     end
 
-    if tick < 60 then return fmt_time("sec") end
+    if tick < 60 then
+        return fmt_time("sec")
+    end
 
     tick = round(tick / 60)
-    if tick < 60 then return fmt_time("min") end
+    if tick < 60 then
+        return fmt_time("min")
+    end
 
     tick = round(tick / 60)
-    if tick < 24 then return fmt_time("hour") end
+    if tick < 24 then
+        return fmt_time("hour")
+    end
 
     tick = round(tick / 24)
     return fmt_time("day")
@@ -152,34 +160,41 @@ _M.rename = function(bufnr)
         prompt = "Rename To: ",
         default = old_path,
         completion = "dir",
-    }, function(path) new_path = path end)
+    }, function(path)
+        new_path = path
+    end)
     vim.cmd("redraw") -- refresh the command line
 
-    if not new_path then return end
+    if not new_path then
+        return
+    end
 
-    if new_path:sub(1, 1) ~= '/' then
+    if new_path:sub(1, 1) ~= "/" then
         _M.echo_err_msg("Must be a absolute path")
         return
     end
 
-    if new_path:sub(#new_path, #new_path) == '/' then
+    if new_path:sub(#new_path, #new_path) == "/" then
         -- if the new path is a directory, it is like moving the file to the directory
         new_path = new_path .. vim.fn.fnamemodify(old_path, ":t")
     end
 
     -- `validate_env` already doing a lot checking
 
-    if new_path == old_path then return end
+    if new_path == old_path then
+        return
+    end
 
     if vim.fn.filereadable(new_path) == 1 then
-        local ok, ret = pcall(vim.fn.confirm, "New path exists, overwrite it?", "&Yes\n&No", 2, "Warning")
+        local ok, ret =
+            pcall(vim.fn.confirm, "New path exists, overwrite it?", "&Yes\n&No", 2, "Warning")
         if not ok or ret == 2 then
             _M.echo_info_msg("Canceled")
             return
         end
     end
 
-    local ok, _ = pcall(vim.fn.mkdir, vim.fn.fnamemodify(new_path, ":h"), 'p')
+    local ok, _ = pcall(vim.fn.mkdir, vim.fn.fnamemodify(new_path, ":h"), "p")
     if not ok then
         _M.echo_err_msg("Create nested directory failed")
         return
@@ -191,7 +206,9 @@ _M.rename = function(bufnr)
     end
 
     vim.api.nvim_buf_set_name(bufnr, new_path)
-    vim.api.nvim_buf_call(bufnr, function() vim.cmd('silent! write!') end)
+    vim.api.nvim_buf_call(bufnr, function()
+        vim.cmd("silent! write!")
+    end)
 end
 
 return _M

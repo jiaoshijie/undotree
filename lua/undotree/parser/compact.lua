@@ -18,20 +18,20 @@ end
 --- @return integer
 local adjust_branch_line = function(g_line, col)
     local cell = g_line[#g_line]
-    if cell.char == '/' and (cell.col == col + 1 or cell.col == col - 1) then
+    if cell.char == "/" and (cell.col == col + 1 or cell.col == col - 1) then
         if cell.col ~= col + 1 then
-            table.insert(g_line, { char = '/', col = col + 1 })
+            table.insert(g_line, { char = "/", col = col + 1 })
         end
         return col + 2
-    elseif cell.char == '\\' then
+    elseif cell.char == "\\" then
         if cell.col ~= col - 1 then
-            table.insert(g_line, { char = '\\', col = col - 1 })
+            table.insert(g_line, { char = "\\", col = col - 1 })
         end
         return col - 2
     end
 
     if cell.col ~= col then
-        table.insert(g_line, { char = '|', col = col })
+        table.insert(g_line, { char = "|", col = col })
     end
     return col
 end
@@ -53,21 +53,21 @@ local new_branch_line = function(line2seq, lnum, col, is_merge)
         local pcol = p_line[pc].col
         local ccol = c_line[cc].col
         if pcol == ccol then
-            table.insert(newline.graph_line, { char = '|', col = pcol })
+            table.insert(newline.graph_line, { char = "|", col = pcol })
             pc = pc + 1
             cc = cc + 1
         elseif pcol > ccol then
             cc = cc + 1
-        else  -- pcol < ccol
+        else -- pcol < ccol
             pc = pc + 1
         end
     end
     if is_merge then
         col = col - 2
-        table.insert(newline.graph_line, { char = '\\', col = col + 1 })
-    else  -- fork
+        table.insert(newline.graph_line, { char = "\\", col = col + 1 })
+    else -- fork
         col = col + 2
-        table.insert(newline.graph_line, { char = '/', col = col - 1 })
+        table.insert(newline.graph_line, { char = "/", col = col - 1 })
     end
     table.insert(line2seq, lnum, newline)
 
@@ -84,7 +84,7 @@ local put_seq_node = function(node, line2seq, lnum, col, split)
         -- NOTE: It must be `\`, because I am the node will put `|/` here.
         -- below `\` and above `/` must already has a node
         if split then
-            table.insert(s_line.graph_line, { char = '|', col = col })
+            table.insert(s_line.graph_line, { char = "|", col = col })
         else
             assert(cur_col ~= col - 1) -- it must not belong to the previous branch
             col = adjust_branch_line(s_line.graph_line, col)
@@ -93,13 +93,13 @@ local put_seq_node = function(node, line2seq, lnum, col, split)
     elseif split then
         col = new_branch_line(line2seq, lnum, col, false)
         lnum = lnum + 1
-    elseif col - 2 > cur_col then  -- check if can merge
+    elseif col - 2 > cur_col then -- check if can merge
         col = new_branch_line(line2seq, lnum, col, true)
         lnum = lnum + 1
     end
 
     s_line = goc(line2seq, lnum)
-    table.insert(s_line.graph_line, { char = '*', col = col })
+    table.insert(s_line.graph_line, { char = "*", col = col })
     s_line.seq_node = node
 
     return lnum, col
@@ -114,7 +114,7 @@ local function parse_recursively(root, line2seq, lnum, col, split)
         else
             local cur_col = get_max_col(s_line.graph_line)
             if col - 2 == cur_col then
-                table.insert(s_line.graph_line, { char = '|', col = col })
+                table.insert(s_line.graph_line, { char = "|", col = col })
             elseif col > cur_col then
                 col = new_branch_line(line2seq, lnum, col, true)
                 goto outer_end
@@ -131,9 +131,13 @@ local function parse_recursively(root, line2seq, lnum, col, split)
 
     -- NOTE: I know this will not get the true maximum column number,
     -- but put it here making the code more clean.
-    if maximum_col < col then maximum_col = col end
+    if maximum_col < col then
+        maximum_col = col
+    end
 
-    if not root.children then return end
+    if not root.children then
+        return
+    end
 
     for i, node in ipairs(root.children) do
         parse_recursively(node, line2seq, lnum + 1, col, i ~= 1)
@@ -146,7 +150,7 @@ end
 --- @param rt_ctx table runtime_ctx
 --- @param root UndoTree
 _M.parse = function(rt_ctx, root)
-    local line2seq = {}  --- @type Line2Seq
+    local line2seq = {} --- @type Line2Seq
     maximum_col = 0
     parse_recursively(root, line2seq, 1, 1, false)
     rt_ctx.line2seq = kit.reverse_table(line2seq)

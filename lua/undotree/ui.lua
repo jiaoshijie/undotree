@@ -7,8 +7,12 @@ local gen_win_layout = function()
     local max_col, max_line = vim.o.columns, vim.o.lines
 
     max_line = max_line - vim.o.cmdheight
-    if vim.o.ls ~= 0 then max_line = max_line - 1 end
-    if #vim.o.winbar ~= 0 then max_line = max_line - 1 end
+    if vim.o.ls ~= 0 then
+        max_line = max_line - 1
+    end
+    if #vim.o.winbar ~= 0 then
+        max_line = max_line - 1
+    end
 
     local main = {
         -- default is left
@@ -62,19 +66,18 @@ end
 --- @param winid integer
 --- @param undo_win boolean
 local set_win_opts = function(winid, undo_win)
-    vim.api.nvim_set_option_value('cursorline', undo_win, { win = winid })
+    vim.api.nvim_set_option_value("cursorline", undo_win, { win = winid })
 
-    vim.api.nvim_set_option_value('winblend', 0, { win = winid })
-    vim.api.nvim_set_option_value('winbar', "", { win = winid })
-    vim.api.nvim_set_option_value('signcolumn', 'no', { win = winid })
-    vim.api.nvim_set_option_value('scrolloff', 0, { win = winid })
-    vim.api.nvim_set_option_value('wrap', false, { win = winid })
-    vim.api.nvim_set_option_value('foldenable', false, { win = winid })
-    vim.api.nvim_set_option_value('colorcolumn', '0', { win = winid })
-    vim.api.nvim_set_option_value('winfixbuf', true, { win = winid })
-    vim.api.nvim_set_option_value('winfixwidth', true, { win = winid })
+    vim.api.nvim_set_option_value("winblend", 0, { win = winid })
+    vim.api.nvim_set_option_value("winbar", "", { win = winid })
+    vim.api.nvim_set_option_value("signcolumn", "no", { win = winid })
+    vim.api.nvim_set_option_value("scrolloff", 0, { win = winid })
+    vim.api.nvim_set_option_value("wrap", false, { win = winid })
+    vim.api.nvim_set_option_value("foldenable", false, { win = winid })
+    vim.api.nvim_set_option_value("colorcolumn", "0", { win = winid })
+    vim.api.nvim_set_option_value("winfixbuf", true, { win = winid })
+    vim.api.nvim_set_option_value("winfixwidth", true, { win = winid })
 end
-
 
 --- @param rt_ctx table runtime_ctx
 _M.render = function(rt_ctx)
