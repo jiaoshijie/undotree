@@ -1,27 +1,41 @@
 # undotree
 
-A neovim undotree plugin written in lua.
+This plugin is primarily a visualizer for Neovim’s internal undo tree.
+All undo-related functionality is provided by Neovim itself.
+See `:h undo.txt` and `:h undolevels` for more details.
 
-**Screenshot**
+## Tree Style
 
-![preview](https://user-images.githubusercontent.com/43605101/232043141-f4318a13-8a85-41ee-bbb5-6f86511b32fe.png)
+| Legacy | Compact |
+| :---:  |  :---:  |
+| ![legacy](https://private-user-images.githubusercontent.com/43605101/540214571-4da2ea8a-e2d8-4798-a954-ace2f51f2eac.png?jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NjkzMzA2NTYsIm5iZiI6MTc2OTMzMDM1NiwicGF0aCI6Ii80MzYwNTEwMS81NDAyMTQ1NzEtNGRhMmVhOGEtZTJkOC00Nzk4LWE5NTQtYWNlMmY1MWYyZWFjLnBuZz9YLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPUFLSUFWQ09EWUxTQTUzUFFLNFpBJTJGMjAyNjAxMjUlMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjYwMTI1VDA4MzkxNlomWC1BbXotRXhwaXJlcz0zMDAmWC1BbXotU2lnbmF0dXJlPWFiNDBlNGExM2I1YTQ3NmE4NTZkNTc4ODM0YzI5NjQxMGY5YjgxM2Q0MzE0YTQ0MWI3OWM4ZGJmOWU4ZTUyNmEmWC1BbXotU2lnbmVkSGVhZGVycz1ob3N0In0.XeSSnPzpTFr4MKrHDk5J9BxbxS42C5vbiaYMAo5bKDQ) | ![compact](https://private-user-images.githubusercontent.com/43605101/540214573-a4128152-2bcf-47db-9e6d-072f4240bd1b.png?jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NjkzMzA2NTYsIm5iZiI6MTc2OTMzMDM1NiwicGF0aCI6Ii80MzYwNTEwMS81NDAyMTQ1NzMtYTQxMjgxNTItMmJjZi00N2RiLTllNmQtMDcyZjQyNDBiZDFiLnBuZz9YLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPUFLSUFWQ09EWUxTQTUzUFFLNFpBJTJGMjAyNjAxMjUlMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjYwMTI1VDA4MzkxNlomWC1BbXotRXhwaXJlcz0zMDAmWC1BbXotU2lnbmF0dXJlPTkwYzQ4ZGY4NThlOGVmNjQ0ZjMwZWUyNzQxZWNiYzMzNWUzN2Y0NjkzMjE3MGM3M2RkZjRhNDlhOTA5NTY0MzUmWC1BbXotU2lnbmVkSGVhZGVycz1ob3N0In0.3McN5-SczIenMWF6wxnQaouL0TWCS4O8-fcBXlkb4to) |
 
-Diff previewer window shows the difference between the current node and the node under the cursor.
-
-This plugin is designed as a one-shot use that is you edit a file, and wnat to recover some
-text that previously edited but has been deleted, then you open the undotree, chose the
-correct node to recover, or copy the text from the diff window, close it. So this plugin
-only parse the internal undotree structure once as you open this plugin, if you modify the
-file when the undotree opened, then the undotree view is out-of-dated, you must reopen it
-to get the up-to-date view.
-
-### Requirements
+## Requirements
 
 - nvim 0.11.0 or above
 
-### Download and Install
+## Features
 
-Using Vim's built-in package manager:
+1. Visualizes Neovim’s internal undo tree structure
+2. Diff preview between the current undo state and the state under the cursor
+3. Commands for clearing undo history and renaming file
+4. Two tree styles
+5. Multiple window layouts
+6. Self-contained lazy loading
+
+## Non-Features
+
+- Live update while editing the file
+- Multiple undotree instances
+
+I think it a bit odd to keep undotree open while editing. The plugin is designed
+for when you want to undo/redo to or copy something from a state outside your
+current branch, you open the tree, do the operation, and then close it to continue
+editing the file.
+
+## Download and Install
+
+Using Neovim's built-in package manager:
 
 ```sh
 mkdir -p ~/.config/nvim/pack/github/start/
@@ -40,8 +54,6 @@ Using [lazy.nvim](https://github.com/folke/lazy.nvim)
 ```lua
 {
   "jiaoshijie/undotree",
-  ---@module 'undotree.collector'
-  ---@type UndoTreeCollector.Opts
   opts = {
     -- your options
   },
@@ -51,40 +63,45 @@ Using [lazy.nvim](https://github.com/folke/lazy.nvim)
 }
 ```
 
-### Usage
-
-Configuration can be passed to the setup function. Here is an example with the default settings:
+## Usage
 
 > [!NOTE]
 > If you’re fine with the default settings, you don’t need to call the setup
 > function — only the keymaps or user commands need to be configured.
 
-```lua
-local undotree = require('undotree')
+### Configuration
 
-undotree.setup({
-  float_diff = true,  -- using float window previews diff, set this `true` will disable layout option
-  layout = "left_bottom", -- "left_bottom", "left_left_bottom"
-  position = "left", -- "right", "bottom"
-  ignore_filetype = {
-    'undotree',
-    'undotreeDiff',
-    'qf',
-  },
-  window = {
-    winblend = 30,
-    border = "rounded", -- The string values are the same as those described in 'winborder'.
-  },
-  keymaps = {
-    j = "move_next",
-    k = "move_prev",
-    gj = "move2parent",
-    J = "move_change_next",
-    K = "move_change_prev",
-    ['<cr>'] = "action_enter",
-    p = "enter_diffbuf",
-    q = "quit",
-  },
+Configuration can be passed to the setup function.
+Here is an example with the default settings:
+
+```lua
+require('undotree').setup({
+    float_diff = true, -- set this `true` will disable layout option
+    --- @type "left_bottom" | "left_left_bottom"
+    layout = "left_bottom", -- {left}_{bottom} {left}_{left_bottom}
+    --- @type "left" | "right"
+    position = "left",
+    window = {
+        width = 0.25, -- the `undotree` window width percentage related to the editor
+        height = 0.25, -- the `preview`(not floating) window height percentage related to the editor
+        border = "rounded", -- float window
+    },
+
+    ignore_filetype = {},
+    --- @type "compact" | "legacy"
+    parser = "compact",
+
+    keymaps = {
+        ["j"] = "move_next",
+        ["k"] = "move_prev",
+        ["gj"] = "move2parent",
+        ["J"] = "move_change_next",
+        ["K"] = "move_change_prev",
+        ["<cr>"] = "action_enter",
+        ["p"] = "enter_diffbuf", -- this can switch between preview and undotree window
+        ["q"] = "quit",
+        ["S"] = "update_undotree_view",
+    },
 })
 ```
 
@@ -100,52 +117,78 @@ vim.keymap.set('n', '<leader>u', require('undotree').toggle, { noremap = true, s
 vim.keymap.set('n', '<leader>uo', require('undotree').open, { noremap = true, silent = true })
 vim.keymap.set('n', '<leader>uc', require('undotree').close, { noremap = true, silent = true })
 ```
-### User commands:
 
-This creates an `Undotree <subcommand>` command with three options: `toggle`, `open` and `close`
+### User Commands
+
+Or if you want to use user command, the following code snippet creates an
+`Undotree <subcommand>` command with three options: `toggle`, `open` and `close`.
+
 ```lua
 vim.api.nvim_create_user_command('Undotree', function(opts)
-  local args = opts.fargs
-  local cmd = args[1]
+    local args = opts.fargs
+    local cmd = args[1]
 
-  if cmd == "toggle" then
-    require("undotree").toggle()
-  elseif cmd == "open" then
-    require("undotree").open()
-  elseif cmd == "close" then
-    require("undotree").close()
-  else
-    vim.notify("Invalid subcommand: " .. (cmd or ""), vim.log.levels.ERROR)
-  end
+    local cb = require("undotree")[cmd]
+
+    if cmd == "setup" or cb == nil then
+        vim.notify("Invalid subcommand: " .. (cmd or ""), vim.log.levels.ERROR)
+    else
+        cb()
+    end
 end, {
-  nargs = 1,
-  complete = function(_, line)
-    local subcommands = { "toggle", "open", "close" }
-    local input = vim.split(line, "%s+")
-    local prefix = input[#input]
-
-    return vim.tbl_filter(function(cmd)
-      return vim.startswith(cmd, prefix)
-    end, subcommands)
-  end,
-  desc = "Undotree command with subcommands: toggle, open, close",
+    nargs = 1,
+    complete = function(arg_lead)
+        return vim.tbl_filter(function(cmd)
+            return vim.startswith(cmd, arg_lead)
+        end, { "toggle", "open", "close" })
+    end,
+    desc = "Undotree command with subcommands: toggle, open, close",
 })
 ```
 
-2. Some Mappings
+### Undotree Buffer Interface
 
-| Mappings | Action                                               |
-| ----     | ----                                                 |
-| `j`      | jump to next undo node                               |
-| `gj`     | jump to the parent node of the node under the cursor |
-| `k`      | jump to prev undo node                               |
-| `J`      | jump to next undo node and undo to this state        |
-| `K`      | jump to prev undo node and undo to this state        |
-| `q`      | quit undotree                                        |
-| `p`      | jump into the undotree diff window                   |
-| `Enter`  | undo to this state                                   |
+#### Default Keymaps
 
+| Mappings | Action                                           |
+| :----:   | :----:                                           |
+| `j`      | Move cursor to next undo node                    |
+| `k`      | Move cursor to previous undo node                |
+| `gj`     | Jump to the parent of the current node           |
+| `J`      | Move to next node and apply that state           |
+| `K`      | Move to previous node and apply that state       |
+| `Enter`  | Undo to this state                               |
+| `p`      | Switch focus between undotree and preview window |
+| `q`      | Quit undotree (also works in preview window)     |
+| `S`      | Force re-parse of Neovim's internal undo history |
 
-### License
+#### Two User Commands
+
+> [!CAUTION]
+> These commands are local to the undotree buffer, not the file buffer,
+> but the operations are performed on the file buffer.
+
+- `UndotreeClearHistory`: Clear the entire in-memory undo history
+  + To persist this change, write the buffer to disk with `:w`; Neovim will clear
+    the undo file on disk.
+  + To discard this change, delete the buffer without writing and reopen the file.
+- `UndotreeRename`: Rename the file while preserving undo history
+  + The target path may be either a filename or a directory (like `mv`).
+  + If the target file already exists, you will be asked to confirm the overwrite.
+
+## Bug Reports
+
+Bug reports are welcome.
+
+If you encounter a parser bug:
+
+- Please include a screenshot showing how the undotree ascii graph is rendered.
+- If you are able to share the file:
+  - Use `:wundo {file_name}.undo` to generate the undo file.
+  - Attach both the file and its undo file to the issue.
+- If you are not able to share the file:
+  - Run `:echo undotree()` and include the output (Neovim’s internal undo tree table) in the issue.
+
+## License
 
 **MIT**
