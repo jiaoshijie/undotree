@@ -8,7 +8,7 @@ See `:h undo.txt` and `:h undolevels` for more details.
 
 | Legacy | Compact |
 | :---:  |  :---:  |
-| ![legacy](https://imgur.com/gallery/git-repo-images-OGSbN89#pwKpOGb) | ![compact](https://imgur.com/gallery/git-repo-images-OGSbN89#EebI5Cd) |
+| ![legacy](https://i.imgur.com/pwKpOGb.png) | ![compact](https://i.imgur.com/EebI5Cd.png) |
 
 ## Requirements
 
