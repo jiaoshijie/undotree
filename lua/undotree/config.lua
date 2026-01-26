@@ -35,6 +35,10 @@ _M.keymaps_cfg = {
 
 -- NOTE: this code is ugly, but it's for backward compatibility
 _M.setup = function(cfg)
+    if type(cfg) ~= "table" then
+        return
+    end
+
     _M.common = vim.tbl_extend("force", _M.common, {
         ignore_filetype = cfg.ignore_filetype,
         parser = cfg.parser,
@@ -42,7 +46,9 @@ _M.setup = function(cfg)
     cfg.ignore_filetype = nil
     cfg.parser = nil
 
-    _M.keymaps_cfg = vim.tbl_extend("force", _M.keymaps_cfg, cfg.keymaps)
+    if type(cfg.keymaps) == "table" then
+        _M.keymaps_cfg = vim.tbl_extend("force", _M.keymaps_cfg, cfg.keymaps)
+    end
     cfg.keymaps = nil
 
     _M.ui_cfg = vim.tbl_deep_extend("force", _M.ui_cfg, cfg)
