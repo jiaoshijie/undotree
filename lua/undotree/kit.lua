@@ -139,7 +139,7 @@ _M.clear_whole_undo_history = function(bufnr)
     assert(vim.api.nvim_buf_is_loaded(bufnr))
     local old_undolevels = vim.api.nvim_get_option_value("undolevels", { buf = bufnr })
     if old_undolevels == -1 then
-        kit.echo_info_msg("`undolevels` is -1, no undo histroy need to be clear")
+        _M.echo_info_msg("`undolevels` is -1, no undo histroy need to be clear")
         return
     end
     vim.api.nvim_set_option_value("undolevels", -1, { buf = bufnr })
