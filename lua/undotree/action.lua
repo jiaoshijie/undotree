@@ -23,7 +23,12 @@ _M.move2parent = function(rt_ctx, rt_ops)
         return
     end
     local seq = seqline.seq_node.parent_seq
-    rt_ops.set_cursor(rt_ctx.seq2line[seq], 0)
+    local lnum = rt_ctx.seq2line[seq]
+    -- root (or missing) parent should not move the cursor.
+    if not lnum then
+        return
+    end
+    rt_ops.set_cursor(lnum, 0)
 end
 
 --- @param rt_ctx table runtime_ctx
