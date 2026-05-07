@@ -233,8 +233,7 @@ end
 
 _M.apply = function(lnum)
     local seqline = ctx.line2seq[lnum]
-    if not seqline or not seqline.seq_node
-        or ctx.cur_seq == seqline.seq_node.seq then
+    if not seqline or not seqline.seq_node or ctx.cur_seq == seqline.seq_node.seq then
         return
     end
     ctx.prev_seq = ctx.cur_seq
