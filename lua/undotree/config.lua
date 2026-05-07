@@ -22,15 +22,15 @@ _M.ui_cfg = {
 }
 
 _M.keymaps_cfg = {
-    ["j"] = "move_next",
-    ["k"] = "move_prev",
-    ["gj"] = "move2parent",
-    ["J"] = "move_change_next",
-    ["K"] = "move_change_prev",
-    ["<cr>"] = "action_enter",
-    ["p"] = "enter_diffbuf", -- this can switch between preview and undotree window
-    ["q"] = "quit",
-    ["S"] = "update_undotree_view",
+    ["move_next"] = "j",
+    ["move_prev"] = "k",
+    ["move2parent"] = "gj",
+    ["move_change_next"] = "J",
+    ["move_change_prev"] = "K",
+    ["action_enter"] = "<cr>",
+    ["enter_diffbuf"] = "p", -- is defined for both undotree and preview buffers, so it works as a toggle
+    ["quit"] = "q", -- is defined for both undotree and preview buffers
+    ["update_undotree_view"] = "S",
 }
 
 -- NOTE: this code is ugly, but it's for backward compatibility
@@ -47,6 +47,27 @@ _M.setup = function(cfg)
     cfg.parser = nil
 
     if type(cfg.keymaps) == "table" then
+        -- backward compatibility for old keymaps table
+        local next_key, _ = next(cfg.keymaps)
+        if _M.keymaps_cfg[next_key] == nil then
+            vim.defer_fn(function()
+                vim.notify(
+                    "WARNING: `keymaps = { [lhs] = action }` is deprecated; "
+                        .. "use `keymaps = { [action] = lhs }` instead.\n"
+                        .. "See `:h undotree-configuration` for details.",
+                    vim.log.levels.WARN,
+                    { title = "Undotree Config", timeout = 5000 }
+                )
+            end, 500)
+            -- NOTE: the only issue of flipping will be if the user
+            -- for some reason uses multiple keymaps for the same action
+            local flipped_keymaps = {}
+            for k, v in pairs(cfg.keymaps) do
+                flipped_keymaps[v] = k
+            end
+            cfg.keymaps = flipped_keymaps
+        end
+
         _M.keymaps_cfg = vim.tbl_extend("force", _M.keymaps_cfg, cfg.keymaps)
     end
     cfg.keymaps = nil
