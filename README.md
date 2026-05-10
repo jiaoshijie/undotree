@@ -92,18 +92,20 @@ require('undotree').setup({
     parser = "compact",
 
     keymaps = {
-        ["j"] = "move_next",
-        ["k"] = "move_prev",
-        ["gj"] = "move2parent",
-        ["J"] = "move_change_next",
-        ["K"] = "move_change_prev",
-        ["<cr>"] = "action_enter",
-        ["p"] = "enter_diffbuf", -- this can switch between preview and undotree window
-        ["q"] = "quit",
-        ["S"] = "update_undotree_view",
+        ["move_next"] = "j",
+        ["move_prev"] = "k",
+        ["move2parent"] = "gj",
+        ["move_change_next"] = "J",
+        ["move_change_prev"] = "K",
+        ["action_enter"] = "<cr>",
+        ["enter_diffbuf"] = "p", -- is defined for both undotree and preview buffers, so it works as a toggle
+        ["quit"] = "q", -- is defined for both undotree and preview buffers
+        ["update_undotree_view"] = "S",
     },
 })
 ```
+> [!IMPORTANT]
+> There was a breaking change introduced in #46. The action and the left-hand-side switched places in the `keymaps` table.
 
 ### Keymaps
 

@@ -132,15 +132,15 @@ local set_keymaps = function()
     local map_opts = { noremap = true, silent = true, buffer = ctx.bufnr }
 
     for k, v in pairs(cfg.keymaps_cfg) do
-        vim.keymap.set("n", k, function()
-            action[v](ctx, _M)
+        vim.keymap.set("n", v, function()
+            action[k](ctx, _M)
         end, map_opts)
     end
     map_opts.buffer = ctx.p_bufnr
-    vim.keymap.set("n", "p", function()
+    vim.keymap.set("n", cfg.keymaps_cfg["enter_diffbuf"], function()
         action["enter_diffbuf"](ctx, _M)
     end, map_opts)
-    vim.keymap.set("n", "q", function()
+    vim.keymap.set("n", cfg.keymaps_cfg["quit"], function()
         _M.close()
     end, map_opts)
 end
@@ -233,8 +233,7 @@ end
 
 _M.apply = function(lnum)
     local seqline = ctx.line2seq[lnum]
-    if not seqline or not seqline.seq_node
-        or ctx.cur_seq == seqline.seq_node.seq then
+    if not seqline or not seqline.seq_node or ctx.cur_seq == seqline.seq_node.seq then
         return
     end
     ctx.prev_seq = ctx.cur_seq
