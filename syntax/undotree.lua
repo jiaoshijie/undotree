@@ -5,5 +5,6 @@ syn match UndotreeSeq ' \zs\d\+\ze '
 syn match UndotreeCurrent '>\d\+<'
 syn match UndotreeTimeStamp '(.*)$'
 syn match UndotreeSaved ' \zss\ze '
+syn match UndotreeSavedCur ' \zsS\ze '
 syn match UndotreeBranch '[+|\/-]'
 ]])

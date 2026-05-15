@@ -35,6 +35,7 @@ local _M = {}
 -------------------------------------------------------------------------------
 
 local minimum_seq = math.huge
+local save_cur = 0
 
 --- @param seq integer
 --- @param pseq integer
@@ -47,7 +48,7 @@ local new_seq_node = function(seq, pseq, time, save)
         parent_seq = pseq,
         stat = {
             time = time,
-            save = save and true or false,
+            save = save and (save == save_cur and " S" or " s") or "",
         },
     }
 end
@@ -109,7 +110,7 @@ local gen_ascii_graph = function(rt_ctx, max_col)
                     line,
                     rep(" ", max_col - #line),
                     v.seq_node.seq,
-                    v.seq_node.stat.save and " s" or "",
+                    v.seq_node.stat.save,
                     kit.time_ago(v.seq_node.stat.time)
                 )
             else
@@ -131,10 +132,15 @@ end
 _M.parse_undotree = function(rt_ctx)
     local tree_ctx = vim.fn.undotree(rt_ctx.target_bufnr)
 
-    if tree_ctx.seq_last == rt_ctx.max_seq and #tree_ctx.entries ~= 0 then
+    if
+        tree_ctx.seq_last == rt_ctx.max_seq
+        and #tree_ctx.entries ~= 0
+        and tree_ctx.save_cur == save_cur
+    then
         return nil
     end
 
+    save_cur = tree_ctx.save_cur
     rt_ctx.max_seq = tree_ctx.seq_last
     rt_ctx.cur_seq = #tree_ctx.entries ~= 0 and tree_ctx.seq_cur or 0
     rt_ctx.line2seq = nil

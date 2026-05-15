@@ -5,6 +5,7 @@ local highlights = {
     UndotreeCurrent = { default = true, link = "Statement" },
     UndotreeTimeStamp = { default = true, link = "Conceal" },
     UndotreeSaved = { default = true, link = "Label" },
+    UndotreeSavedCur = { default = true, link = "Special" },
     UndotreeBranch = { default = true, link = "Constant" },
 
     UndotreeDiffLine = { default = true, link = "diffLine" },
