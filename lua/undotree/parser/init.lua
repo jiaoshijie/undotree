@@ -35,7 +35,7 @@ local _M = {}
 -------------------------------------------------------------------------------
 
 local minimum_seq = math.huge
-local save_cur = 0
+local save_last = 0
 
 --- @param seq integer
 --- @param pseq integer
@@ -48,7 +48,7 @@ local new_seq_node = function(seq, pseq, time, save)
         parent_seq = pseq,
         stat = {
             time = time,
-            save = save and (save == save_cur and " S" or " s") or "",
+            save = save and (save == save_last and " S" or " s") or "",
         },
     }
 end
@@ -135,12 +135,12 @@ _M.parse_undotree = function(rt_ctx)
     if
         tree_ctx.seq_last == rt_ctx.max_seq
         and #tree_ctx.entries ~= 0
-        and tree_ctx.save_cur == save_cur
+        and tree_ctx.save_last == save_last
     then
         return nil
     end
 
-    save_cur = tree_ctx.save_cur
+    save_last = tree_ctx.save_last
     rt_ctx.max_seq = tree_ctx.seq_last
     rt_ctx.cur_seq = #tree_ctx.entries ~= 0 and tree_ctx.seq_cur or 0
     rt_ctx.line2seq = nil
