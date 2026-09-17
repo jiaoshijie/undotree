@@ -131,7 +131,7 @@ local set_events = function()
 end
 
 local set_keymaps = function()
-    local map_opts = { noremap = true, silent = true, buffer = ctx.bufnr }
+    local map_opts = { silent = true, buffer = ctx.bufnr }
 
     for k, v in pairs(cfg.keymaps_cfg) do
         vim.keymap.set("n", v, function()
