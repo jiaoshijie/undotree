@@ -95,10 +95,11 @@ _M.modify_buf = function(bufnr, cb)
     if not vim.api.nvim_buf_is_loaded(bufnr) then
         return
     end
+    local opts = { buf = bufnr, scope = "local" }
 
-    vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
+    vim.api.nvim_set_option_value("modifiable", true, opts)
     cb()
-    vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
+    vim.api.nvim_set_option_value("modifiable", false, opts)
 end
 
 --- @param seq integer
@@ -142,10 +143,12 @@ _M.clear_whole_undo_history = function(bufnr)
         _M.echo_info_msg("`undolevels` is -1, no undo histroy need to be clear")
         return
     end
-    vim.api.nvim_set_option_value("undolevels", -1, { buf = bufnr })
+    local opts = { buf = bufnr, scope = "local" }
+
+    vim.api.nvim_set_option_value("undolevels", -1, opts)
     vim.api.nvim_buf_set_lines(bufnr, 0, 0, false, { "" })
     vim.api.nvim_buf_set_lines(bufnr, 0, 1, false, {})
-    vim.api.nvim_set_option_value("undolevels", old_undolevels, { buf = bufnr })
+    vim.api.nvim_set_option_value("undolevels", old_undolevels, opts)
 end
 
 _M.rename = function(bufnr)

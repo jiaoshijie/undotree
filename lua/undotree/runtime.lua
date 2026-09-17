@@ -78,8 +78,10 @@ end
 local set_target = function()
     ctx.target_bufnr = vim.api.nvim_get_current_buf()
     ctx.target_winid = vim.api.nvim_get_current_win()
-    ctx.win_fix_buf = vim.api.nvim_get_option_value("winfixbuf", { win = ctx.target_winid })
-    vim.api.nvim_set_option_value("winfixbuf", true, { win = ctx.target_winid })
+    local opts = { win = ctx.target_winid, scope = "local" }
+
+    ctx.win_fix_buf = vim.api.nvim_get_option_value("winfixbuf", opts)
+    vim.api.nvim_set_option_value("winfixbuf", true, opts)
 end
 
 -- NOTE: this function should rarely be called
@@ -165,13 +167,15 @@ local set_user_cmd = function()
 end
 
 local set_buf_options = function()
-    vim.api.nvim_set_option_value("filetype", "undotree", { buf = ctx.bufnr })
-    vim.api.nvim_set_option_value("undolevels", -1, { buf = ctx.bufnr })
-    vim.api.nvim_set_option_value("modifiable", false, { buf = ctx.bufnr })
+    local opts = { buf = ctx.bufnr, scope = "local" }
+    vim.api.nvim_set_option_value("filetype", "undotree", opts)
+    vim.api.nvim_set_option_value("undolevels", -1, opts)
+    vim.api.nvim_set_option_value("modifiable", false, opts)
 
-    vim.api.nvim_set_option_value("filetype", "UndotreeDiff", { buf = ctx.p_bufnr })
-    vim.api.nvim_set_option_value("undolevels", -1, { buf = ctx.p_bufnr })
-    vim.api.nvim_set_option_value("modifiable", false, { buf = ctx.p_bufnr })
+    opts.buf = ctx.p_bufnr
+    vim.api.nvim_set_option_value("filetype", "UndotreeDiff", opts)
+    vim.api.nvim_set_option_value("undolevels", -1, opts)
+    vim.api.nvim_set_option_value("modifiable", false, opts)
 end
 
 local prepare_buffers = function()
@@ -315,7 +319,8 @@ _M.close = function()
     end
 
     if vim.api.nvim_win_is_valid(ctx.target_winid) then
-        vim.api.nvim_set_option_value("winfixbuf", ctx.win_fix_buf, { win = ctx.target_winid })
+        vim.api.nvim_set_option_value("winfixbuf", ctx.win_fix_buf,
+            { win = ctx.target_winid, scope = "local" })
         vim.api.nvim_set_current_win(ctx.target_winid)
     end
     ctx.target_bufnr = nil

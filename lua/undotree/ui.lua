@@ -66,17 +66,18 @@ end
 --- @param winid integer
 --- @param undo_win boolean
 local set_win_opts = function(winid, undo_win)
-    vim.api.nvim_set_option_value("cursorline", undo_win, { win = winid })
+    local opts = { win = winid, scope = "local" }
+    vim.api.nvim_set_option_value("cursorline", undo_win, opts)
 
-    vim.api.nvim_set_option_value("winblend", 0, { win = winid })
-    vim.api.nvim_set_option_value("winbar", "", { win = winid })
-    vim.api.nvim_set_option_value("signcolumn", "no", { win = winid })
-    vim.api.nvim_set_option_value("scrolloff", 0, { win = winid })
-    vim.api.nvim_set_option_value("wrap", false, { win = winid })
-    vim.api.nvim_set_option_value("foldenable", false, { win = winid })
-    vim.api.nvim_set_option_value("colorcolumn", "0", { win = winid })
-    vim.api.nvim_set_option_value("winfixbuf", true, { win = winid })
-    vim.api.nvim_set_option_value("winfixwidth", true, { win = winid })
+    vim.api.nvim_set_option_value("winblend", 0, opts)
+    vim.api.nvim_set_option_value("winbar", "", opts)
+    vim.api.nvim_set_option_value("signcolumn", "no", opts)
+    vim.api.nvim_set_option_value("scrolloff", 0, opts)
+    vim.api.nvim_set_option_value("wrap", false, opts)
+    vim.api.nvim_set_option_value("foldenable", false, opts)
+    vim.api.nvim_set_option_value("colorcolumn", "0", opts)
+    vim.api.nvim_set_option_value("winfixbuf", true, opts)
+    vim.api.nvim_set_option_value("winfixwidth", true, opts)
 end
 
 --- @param rt_ctx table runtime_ctx
