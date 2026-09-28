@@ -53,7 +53,7 @@ _M.parse = function(rt_ctx, root)
     local line2seq = {} --- @type Line2Seq
     maximum_col = 0
     parse_recursively(root, line2seq, 1, 1)
-    rt_ctx.line2seq = kit.reverse_table(line2seq)
+    rt_ctx.line2seq = kit.reverse_list(line2seq)
     return maximum_col
 end
 

@@ -40,7 +40,7 @@ end
 
 ---@param T table
 ---@return table T
-_M.reverse_table = function(T)
+_M.reverse_list = function(T)
     if vim.tbl_isempty(T) then
         return T
     end
