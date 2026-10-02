@@ -37,6 +37,18 @@ local _M = {}
 local minimum_seq = math.huge
 local save_last = 0
 
+local time_ago = kit.time_ago
+local get_tree_ctx = function(rt_ctx)
+    return vim.fn.undotree(rt_ctx.target_bufnr)
+end
+
+if vim.g.undotree_testing then
+    time_ago = function() return "t" end
+    get_tree_ctx = function(rt_ctx)
+        return rt_ctx.undotree_history
+    end
+end
+
 --- @param seq integer
 --- @param pseq integer
 --- @param time integer
@@ -111,7 +123,7 @@ local gen_ascii_graph = function(rt_ctx, max_col)
                     rep(" ", max_col - #line),
                     v.seq_node.seq,
                     v.seq_node.stat.save,
-                    kit.time_ago(v.seq_node.stat.time)
+                    time_ago(v.seq_node.stat.time)
                 )
             else
                 line = fmt("%s  %s%d (Orig)", line, rep(" ", max_col - #line), minimum_seq)
@@ -130,7 +142,7 @@ end
 --- @param rt_ctx table runtime_ctx
 --- @return string[]?  ascii graph   nil: not parsed
 _M.parse_undotree = function(rt_ctx)
-    local tree_ctx = vim.fn.undotree(rt_ctx.target_bufnr)
+    local tree_ctx = get_tree_ctx(rt_ctx)
 
     if
         tree_ctx.seq_last == rt_ctx.max_seq

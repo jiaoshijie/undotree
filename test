@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+
+SCRIPT_DIR=$(dirname "$0")
+
+fatal() {
+  echo -e "${RED}FATAL_ERROR${RESET}: $*"
+  exit 1
+}
+
+cd "$SCRIPT_DIR" || fatal "cd failed"
+
+NEOVIM_BIN_PATH=${JSJ_NEOVIM_BIN:-$(command -v nvim)}
+
+if [[ "$TERM" == "dumb" ]]; then
+  GREEN=
+  RED=
+  RESET=
+else
+  GREEN='\e[1;32m'
+  RED='\e[1;31m'
+  RESET='\e[0m'
+fi
+
+fatal() {
+  echo -e "${RED}FATAL_ERROR${RESET}: $*"
+  exit 1
+}
+
+eval "$NEOVIM_BIN_PATH --clean --headless -c 'set rtp+=.' \
+  -l '${SCRIPT_DIR}/tests/test.lua'" || exit 1
+
+echo -e "${GREEN}ALL PASSED${RESET}"
