@@ -189,7 +189,7 @@ If you encounter a parser bug:
   - Use `:wundo {file_name}.undo` to generate the undo file.
   - Attach both the file and its undo file to the issue.
 - If you are not able to share the file:
-  - Run `:echo undotree()` and include the output (Neovim’s internal undo tree table) in the issue.
+  - Run `lua print(vim.json.encode(vim.fn.undotree()))` and include the output (Neovim’s internal undo tree table) in the issue.
 
 ## License
 
