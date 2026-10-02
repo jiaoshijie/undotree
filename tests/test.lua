@@ -2,10 +2,16 @@ vim.g.undotree_testing = true
 local fmt = string.format
 
 local eq = function(expected, actual)
-  if not vim.deep_equal(expected, actual) then
-    error(fmt("\nexpected:\n%s\n\nactual:\n%s\n",
-        table.concat(expected, '\n'), table.concat(actual, '\n')), 2)
-  end
+    if not vim.deep_equal(expected, actual) then
+        error(
+            fmt(
+                "\nexpected:\n%s\n\nactual:\n%s\n",
+                table.concat(expected, "\n"),
+                table.concat(actual, "\n")
+            ),
+            2
+        )
+    end
 end
 
 local parser = require("undotree.parser")
@@ -33,9 +39,12 @@ for name, typ in iter do
         error(fmt("Invalid undotree history file %s", case_file), 2)
     end
 
-    eq(vim.list_slice(lines, 3, end_line), parser.parse_undotree({
-        undotree_history = undotree_history,
-    }))
+    eq(
+        vim.list_slice(lines, 3, end_line),
+        parser.parse_undotree({
+            undotree_history = undotree_history,
+        })
+    )
 
     cfg.common.parser = "compact"
     local start_line = end_line + 2
@@ -43,7 +52,10 @@ for name, typ in iter do
     if type(end_line) ~= "number" then
         error(fmt("Invalid undotree history file %s", case_file), 2)
     end
-    eq(vim.list_slice(lines, start_line, end_line), parser.parse_undotree({
-        undotree_history = undotree_history,
-    }))
+    eq(
+        vim.list_slice(lines, start_line, end_line),
+        parser.parse_undotree({
+            undotree_history = undotree_history,
+        })
+    )
 end

@@ -319,8 +319,11 @@ _M.close = function()
     end
 
     if vim.api.nvim_win_is_valid(ctx.target_winid) then
-        vim.api.nvim_set_option_value("winfixbuf", ctx.win_fix_buf,
-            { win = ctx.target_winid, scope = "local" })
+        vim.api.nvim_set_option_value(
+            "winfixbuf",
+            ctx.win_fix_buf,
+            { win = ctx.target_winid, scope = "local" }
+        )
         vim.api.nvim_set_current_win(ctx.target_winid)
     end
     ctx.target_bufnr = nil

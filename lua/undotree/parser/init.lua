@@ -43,7 +43,9 @@ local get_tree_ctx = function(rt_ctx)
 end
 
 if vim.g.undotree_testing then
-    time_ago = function() return "t" end
+    time_ago = function()
+        return "t"
+    end
     get_tree_ctx = function(rt_ctx)
         return rt_ctx.undotree_history
     end
