@@ -214,4 +214,23 @@ _M.rename = function(bufnr)
     end)
 end
 
+--- @return boolean
+_M.stack_push = function(stack, value)
+    if not vim.islist(stack) then
+        return false
+    end
+
+    table.insert(stack, value)
+    return true
+end
+
+--- @return any?
+_M.stack_pop = function(stack)
+    if not vim.islist(stack) or #stack == 0 then
+        return nil
+    end
+
+    return table.remove(stack)
+end
+
 return _M

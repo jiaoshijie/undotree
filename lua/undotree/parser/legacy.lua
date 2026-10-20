@@ -1,47 +1,57 @@
 local kit = require("undotree.kit")
 local _M = {}
-local maximum_col = 0
 
 local goc = function(t, i)
     t[i] = t[i] or { graph_line = {} }
     return t[i]
 end
 
---- @return integer max_col
-local function parse_recursively(root, line2seq, lnum, col)
-    local g_line = goc(line2seq, lnum).graph_line
+--- @return integer
+local parse = function(stack, line2seq)
+    local top_node = kit.stack_pop(stack)
+    local max_col = 1
 
-    if root.seq - root.parent_seq > 1 then
-        for _ = 1, root.seq - root.parent_seq - 1 do
-            table.insert(g_line, { col = col, char = "|" })
-            lnum = lnum + 1
-            g_line = goc(line2seq, lnum).graph_line
+    while top_node do
+        local root, lnum = top_node.node, top_node.lnum
+        local col = top_node.col or max_col + 2
+        local pctx = top_node.parent_ctx
+
+        if pctx then
+            for idx = pctx.col + 1, col do
+                table.insert(pctx.line, { col = idx, char = idx == col and "+" or "-" })
+            end
+            pctx.col = col
         end
-    end
-    line2seq[lnum].seq_node = root
-    table.insert(g_line, { col = col, char = "*" })
-    local max_col = col - 2
 
-    if maximum_col < col then
-        maximum_col = col
-    end
+        local g_line = goc(line2seq, lnum).graph_line
 
-    if not root.children then
-        return col
-    end
-
-    for _, node in ipairs(root.children) do
-        max_col = max_col + 2
-        for i = col + 1, max_col do
-            table.insert(g_line, { col = i, char = i == max_col and "+" or "-" })
+        if root.seq - root.parent_seq > 1 then
+            for _ = 1, root.seq - root.parent_seq - 1 do
+                table.insert(g_line, { col = col, char = "|" })
+                lnum = lnum + 1
+                g_line = goc(line2seq, lnum).graph_line
+            end
         end
-        col = max_col
+        line2seq[lnum].seq_node = root
+        table.insert(g_line, { col = col, char = "*" })
+        max_col = col
 
-        max_col = parse_recursively(node, line2seq, lnum + 1, col)
+        if root.children then
+            local ctx = { line = g_line, col = col }
+            for idx = #root.children, 1, -1 do
+                kit.stack_push(stack, {
+                    node = root.children[idx],
+                    lnum = lnum + 1,
+                    col = idx == 1 and col or nil,
+                    parent_ctx = ctx,
+                })
+            end
+            -- NOTE: clear no longer used field
+            root.children = nil
+        end
+
+        top_node = kit.stack_pop(stack)
     end
-
-    -- NOTE: clear member that no longer be used
-    root.children = nil
 
     return max_col
 end
@@ -51,10 +61,18 @@ end
 --- @return integer
 _M.parse = function(rt_ctx, root)
     local line2seq = {} --- @type Line2Seq
-    maximum_col = 0
-    parse_recursively(root, line2seq, 1, 1)
+    local stack = {}
+
+    kit.stack_push(stack, {
+        node = root,
+        lnum = 1,
+        col = 1,
+        parent_ctx = nil,
+    })
+    local max_col = parse(stack, line2seq)
+
     rt_ctx.line2seq = kit.reverse_list(line2seq)
-    return maximum_col
+    return max_col
 end
 
 return _M

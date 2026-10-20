@@ -1,6 +1,5 @@
 local kit = require("undotree.kit")
 local _M = {}
-local maximum_col = 0
 
 local goc = function(t, i)
     t[i] = t[i] or { graph_line = {} }
@@ -105,57 +104,80 @@ local put_seq_node = function(node, line2seq, lnum, col, split)
     return lnum, col
 end
 
-local function parse_recursively(root, line2seq, lnum, col, split)
-    local distance = root.seq - root.parent_seq - 1
-    while distance > 0 do
-        local s_line = goc(line2seq, lnum)
-        if s_line.is_branch then
-            col = adjust_branch_line(s_line.graph_line, col)
-        else
-            local cur_col = get_max_col(s_line.graph_line)
-            if col - 2 == cur_col then
-                table.insert(s_line.graph_line, { char = "|", col = col })
-            elseif col > cur_col then
-                col = new_branch_line(line2seq, lnum, col, true)
-                goto outer_end
+--- @return integer
+local parse = function(stack, line2seq)
+    local top_node = kit.stack_pop(stack)
+    local max_col = 1
+
+    while top_node do
+        local root, lnum = top_node.node, top_node.lnum
+        local col, split = top_node.col, top_node.split
+
+        local distance = root.seq - root.parent_seq - 1
+        while distance > 0 do
+            local s_line = goc(line2seq, lnum)
+            if s_line.is_branch then
+                col = adjust_branch_line(s_line.graph_line, col)
+            else
+                local cur_col = get_max_col(s_line.graph_line)
+                if col - 2 == cur_col then
+                    table.insert(s_line.graph_line, { char = "|", col = col })
+                elseif col > cur_col then
+                    col = new_branch_line(line2seq, lnum, col, true)
+                    goto outer_end
+                end
+                -- NOTE: if col == cur_col do nothing, just follow the branch
+                -- And there is no way cur_col bigger than col
+                distance = distance - 1
             end
-            -- NOTE: if col == cur_col do nothing, just follow the branch
-            -- And there is no way cur_col bigger than col
-            distance = distance - 1
+            ::outer_end::
+            lnum = lnum + 1
         end
-        ::outer_end::
-        lnum = lnum + 1
+
+        lnum, col = put_seq_node(root, line2seq, lnum, col, split)
+
+        -- NOTE: I know this will not get the true maximum column number,
+        -- but put it here making the code more clean.
+        if max_col < col then
+            max_col = col
+        end
+
+        if root.children then
+            for idx = #root.children, 1, -1 do
+                kit.stack_push(stack, {
+                    node = root.children[idx],
+                    lnum = lnum + 1,
+                    col = col,
+                    split = idx ~= 1,
+                })
+            end
+            -- NOTE: clear no longer used field
+            root.children = nil
+        end
+
+        top_node = kit.stack_pop(stack)
     end
 
-    lnum, col = put_seq_node(root, line2seq, lnum, col, split)
-
-    -- NOTE: I know this will not get the true maximum column number,
-    -- but put it here making the code more clean.
-    if maximum_col < col then
-        maximum_col = col
-    end
-
-    if not root.children then
-        return
-    end
-
-    for i, node in ipairs(root.children) do
-        parse_recursively(node, line2seq, lnum + 1, col, i ~= 1)
-    end
-
-    -- clear no longer used variable
-    root.children = nil
+    return max_col
 end
 
 --- @param rt_ctx table runtime_ctx
 --- @param root UndoTree
 _M.parse = function(rt_ctx, root)
     local line2seq = {} --- @type Line2Seq
-    maximum_col = 0
-    parse_recursively(root, line2seq, 1, 1, false)
+    local stack = {}
+
+    kit.stack_push(stack, {
+        node = root,
+        lnum = 1,
+        col = 1,
+        split = false,
+    })
+    local max_col = parse(stack, line2seq)
+
     rt_ctx.line2seq = kit.reverse_list(line2seq)
     -- NOTE: `+ 2`: to fix the false maximum column number above
-    return maximum_col + 2
+    return max_col + 2
 end
 
 return _M
