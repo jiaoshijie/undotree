@@ -18,8 +18,7 @@ local parse = function(stack, line2seq)
 
         if pctx then
             for idx = pctx.col + 1, col do
-                table.insert(pctx.line,
-                    { col = idx, char = idx == col and "+" or "-" })
+                table.insert(pctx.line, { col = idx, char = idx == col and "+" or "-" })
             end
             pctx.col = col
         end
